@@ -1,7 +1,7 @@
 <?php
 include_once(dirname(__FILE__) . '/lib/StringTools.class.php');
 
-$BUILDDIR = '/home/buildrpm';
+$BUILDDIR = dirname(__FILE__) . '/build';
 
 while (($conf_dir = StringTools::consolePrompt('> Select a configuration to load (enter for a list):')) == '') {
 	$conf_folders = scandir(dirname(__FILE__) . '/conf/');
