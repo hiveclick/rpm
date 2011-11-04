@@ -11,7 +11,7 @@ License: commercial
 Source: %{name}-%{version}.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 BuildArch: noarch x86_64
-Requires: php php-gd PowerMTA shared.rad
+Requires: php php-gd PowerMTA
 
 %description
 Provides shared libraries for sending emails using the Rad feeder
@@ -35,7 +35,9 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 
 %post
 php /home/rad/cli/init/install.sh
+useradd -g pmta -s /bin/false rad
 
 %postun
 rm -f /etc/cron.d/rad
 rm -f /etc/logrotate.d/rad
+userdel -r rad

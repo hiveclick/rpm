@@ -89,6 +89,18 @@ $cmd = 'rpmbuild -ba ' . $BUILDDIR . '/SPECS/' . $BASENAME . '-' . $spec_file;
 echo $cmd . "\n";
 passthru($cmd);
 
-echo 'RPM built in ' . '/usr/src/redhat/RPMS/noarch/' . "\n";
-passthru('ls -lh ' . '/usr/src/redhat/RPMS/noarch/');
+$cmd = 'cp -Rf /usr/src/redhat/RPMS/noarch/*.rpm ' . $BUILDDIR . '/RPMS/';
+passthru($cmd);
+
+while (($upload_rpm = StringTools::consolePrompt('> Do you want to upload the RPM to the YUM repository? (Y/n):', 'Y')) == '') { }
+if (strtoupper(trim($upload_rpm)) == 'Y') {
+	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-1' . $revision . '.noarch.rpm root@core1.krypt.com:/var/www/sites/yum/CentOS/5/local/x86_64/RPMS/';
+	passthru($cmd);
+	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-1' . $revision . '.noarch.rpm root@core1.krypt.com:/var/www/sites/yum/CentOS/5/local/noarch/RPMS/';
+	passthru($cmd);
+	echo "\n\n" . 'Run the following command to recompile your YUM repository:' . "\n" . 'createrepo /var/www/sites/yum/CentOS/5/local/x86_64/' . "\n" . 'createrepo /var/www/sites/yum/CentOS/5/local/noarch/' . "\n";
+} else {
+	echo 'RPM built in ' . $BUILDDIR . '/RPMS/' . "\n";
+	passthru('ls -lh ' . $BUILDDIR . '/RPMS/');
+}
 ?>
