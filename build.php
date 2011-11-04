@@ -67,7 +67,7 @@ foreach ($settings['support_files'] as $key => $files) {
 if (file_exists(dirname(__FILE__) . '/conf/' . $conf_dir . '/specs/' . $spec_file)) {
 	$spec = file_get_contents(dirname(__FILE__) . '/conf/' . $conf_dir . '/specs/' . $spec_file);
 	$spec = str_replace('[[VERSION]]', $VERSION, $spec);
-	$spec = str_replace('[[DIST]]', $revision, $spec);
+	$spec = str_replace('[[REVISION]]', $revision, $spec);
 	$spec = str_replace('[[BUILDDIR]]', $BUILDDIR, $spec);
 	file_put_contents($BUILDDIR . '/SPECS/' . $BASENAME . '-' . $spec_file, $spec);
 }
@@ -94,9 +94,9 @@ passthru($cmd);
 
 while (($upload_rpm = StringTools::consolePrompt('> Do you want to upload the RPM to the YUM repository? (Y/n):', 'Y')) == '') { }
 if (strtoupper(trim($upload_rpm)) == 'Y') {
-	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-1' . $revision . '.noarch.rpm root@core1.krypt.com:/var/www/sites/yum/CentOS/5/local/x86_64/RPMS/';
+	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@core1.krypt.com:/var/www/sites/yum/CentOS/5/local/x86_64/RPMS/';
 	passthru($cmd);
-	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-1' . $revision . '.noarch.rpm root@core1.krypt.com:/var/www/sites/yum/CentOS/5/local/noarch/RPMS/';
+	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@core1.krypt.com:/var/www/sites/yum/CentOS/5/local/noarch/RPMS/';
 	passthru($cmd);
 	echo "\n\n" . 'Run the following command to recompile your YUM repository:' . "\n" . 'createrepo /var/www/sites/yum/CentOS/5/local/x86_64/' . "\n" . 'createrepo /var/www/sites/yum/CentOS/5/local/noarch/' . "\n";
 } else {

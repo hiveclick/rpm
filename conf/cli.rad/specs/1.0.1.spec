@@ -1,11 +1,11 @@
 %define name        cli.rad
 %define version 	[[VERSION]]
-%define dist 	    [[DIST]]
+%define revision	[[REVISION]]
 
 Summary: Provides shared libraries for sending emails using the Rad feeder
 Name: %{name}
 Version: %{version}
-Release: 1%{?dist}
+Release: %{revision}
 Group: Applications/Internet
 License: commercial
 Source: %{name}-%{version}.tar.gz
