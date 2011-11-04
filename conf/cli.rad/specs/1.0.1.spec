@@ -42,6 +42,7 @@ if [ "$1" = "1" ]; then
   php /home/rad/cli/init/install.sh
 elif [ "$1" = "2" ]; then
   # Perform whatever maintenance must occur before the upgrade begins
+  echo "Upgrading rad user environment..."
 fi
 
 
@@ -54,4 +55,5 @@ if [ "$1" = "0" ]; then
   userdel -r rad
 elif [ "$1" = "2" ]; then
   # Perform whatever maintenance must occur before the upgrade begins
+  echo "Upgrading rad user environment..."
 fi
