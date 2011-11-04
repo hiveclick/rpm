@@ -20,67 +20,75 @@ if (file_exists($app_dir . '/settings.ini')) {
 	exit;
 }
 
-while (($spec_file = StringTools::consolePrompt('> Select a spec version to load (enter for a list):')) == '') {
+while (($VERSION = StringTools::consolePrompt('> Select a spec version to load (enter for a list):')) == '') {
 	$spec_conf_files = scandir($app_dir . '/specs');
 	foreach ($spec_conf_files as $spec_conf_file) {
 		if (strpos($spec_conf_file, '.') === 0) { continue; }
-		echo StringTools::consoleColor(' * ' . $spec_conf_file, StringTools::CONSOLE_COLOR_GREEN) . "\n";	
+		echo StringTools::consoleColor(' * ' . str_replace('.spec', '', $spec_conf_file), StringTools::CONSOLE_COLOR_GREEN) . "\n";	
 	}
 }
 
-$VERSION = str_replace('.spec', '', $spec_file);
+$spec_file = $VERSION . '.spec';
 
 
 $intro = 'This script will build the RPM for the ' . StringTools::consoleColor($settings['name'], StringTools::CONSOLE_COLOR_YELLOW) . ' project';
 echo $intro . "\n";
 
-$svn_url_array['cli.rad'] = array(
-	'url' => 'http://svn.radinteractive.net/repos/rad/cli.rad/trunk',
-	'dest_folder' => '/var/www/sites/cli.rad/'
-);
-$svn_url_array['dao.rad'] = array(
-	'url' => 'http://svn.radinteractive.net/repos/rad/dao.rad/trunk',
-	'dest_folder' => '/var/www/sites/cli.rad/webapp/modules'
-);
-$svn_url_array['common'] = array(
-	'url' => 'http://svn.radinteractive.net/repos/common/common/trunk/mojavi',
-	'dest_folder' => '/var/www/sites/cli.rad/webapp/lib/mojavi'
-);
+$cmd = 'svn info ' . $settings['revision_url'] . ' | grep "Revision: " | awk \'{print $2}\'';
+$revision = intval(trim(shell_exec($cmd)));
 
-foreach ($svn_url_array as $key => $svn_array) {
+foreach ($settings['subversion'] as $key => $svn_array) {
 	echo "Working on " . $key . "\n";
-	$source_folder = $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $svn_array['dest_folder'];
+	$source_folder = $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $svn_array[1];
 	echo " - Exporting to: " . $source_folder . "\n";
 	if (!file_exists($source_folder)) {
 		$cmd = 'mkdir -p ' . $source_folder;
 		passthru($cmd);
 	}
-	echo " - Exporting url: " . $svn_array['url'] . "\n";
-	$cmd = 'svn export --force ' . $svn_array['url'] . ' ' . $source_folder;
+	echo " - Exporting url: " . $svn_array[0] . "\n";
+	$cmd = 'svn export --force ' . $svn_array[0] . ' ' . $source_folder;
 	passthru($cmd);
 }
 
-echo 'Removing RPM folder' . "\n";
-$cmd = 'rm -Rf ' . $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . 'rpm';
-shell_exec($cmd);
+foreach ($settings['support_files'] as $key => $files) {
+	echo "Working on " . $key . "\n";
+	if (file_exists($BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $settings['root_folder'] . $files[0])) {
+		echo " - Exporting to: " . $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $files[1] . "\n";
+		$source_folder = dirname($BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $files[1]);
+		if (!file_exists($source_folder)) {
+			$cmd = 'mkdir -p ' . $source_folder;
+			passthru($cmd);
+		}
+		$cmd = 'cp ' . $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $settings['root_folder'] . $files[0] . ' ' . $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $files[1];
+		passthru($cmd);
+	}
+}
 
-if (file_exists(dirname(__FILE__) . '/rpm.spec')) {
-	$spec = file_get_contents($app_dir . '/specs/' . $spec_file);
+if (file_exists(dirname(__FILE__) . '/conf/' . $conf_dir . '/specs/' . $spec_file)) {
+	$spec = file_get_contents(dirname(__FILE__) . '/conf/' . $conf_dir . '/specs/' . $spec_file);
 	$spec = str_replace('[[VERSION]]', $VERSION, $spec);
-	$spec = str_replace('[[RELEASE]]', $RELEASE, $spec);
+	$spec = str_replace('[[DIST]]', $revision, $spec);
+	$spec = str_replace('[[BUILDDIR]]', $BUILDDIR, $spec);
 	file_put_contents($BUILDDIR . '/SPECS/' . $BASENAME . '-' . $spec_file, $spec);
 }
 
 echo ' - Tar/Gzipping' . "\n";
-chdir($BUILDDIR . '/SOURCES/');
-$cmd = 'tar -cf ' . $BASENAME . '-' . $VERSION . '-.tar ' . $BASENAME . '-' . $VERSION;
+
+$cmd = 'tar -cPf ' . $BASENAME . '-' . $VERSION . '.tar ' . ' -C ' . $BUILDDIR . '/SOURCES/ ' . $BASENAME . '-' . $VERSION;
+echo $cmd . "\n";
 passthru($cmd);
+
 $cmd = 'gzip ' . $BASENAME . '-' . $VERSION . '.tar';
+echo $cmd . "\n";
+passthru($cmd);
+
+$cmd = 'cp ' . $BASENAME . '-' . $VERSION . '.tar.gz' . ' ' . '/usr/src/redhat/SOURCES';
 passthru($cmd);
 
 $cmd = 'rpmbuild -ba ' . $BUILDDIR . '/SPECS/' . $BASENAME . '-' . $spec_file;
+echo $cmd . "\n";
 passthru($cmd);
 
-echo 'RPM built in ' . $BUILDDIR . '/RPMS/noarch/' . "\n";
-passthru('ll -h ' . $BUILDDIR . '/RPMS/noarch/');
+echo 'RPM built in ' . '/usr/src/redhat/RPMS/noarch/' . "\n";
+passthru('ls -lh ' . '/usr/src/redhat/RPMS/noarch/');
 ?>
