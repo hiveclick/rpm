@@ -34,10 +34,24 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 /.
 
 %post
-php /home/rad/cli/init/install.sh
-useradd -g pmta -s /bin/false rad
+if [ "$1" = "1" ]; then
+  # Perform tasks to prepare for the initial installation
+  echo "Installing rad user environment..."
+  useradd -g pmta -s /bin/false rad
+  echo "Installing RAD for first time use..."
+  php /home/rad/cli/init/install.sh
+elif [ "$1" = "2" ]; then
+  # Perform whatever maintenance must occur before the upgrade begins
+fi
+
 
 %postun
-rm -f /etc/cron.d/rad
-rm -f /etc/logrotate.d/rad
-userdel -r rad
+if [ "$1" = "0" ]; then
+  # Perform tasks to prepare for the final uninstallation
+  echo "Removing rad user environment..."
+  rm -f /etc/cron.d/rad
+  rm -f /etc/logrotate.d/rad
+  userdel -r rad
+elif [ "$1" = "2" ]; then
+  # Perform whatever maintenance must occur before the upgrade begins
+fi

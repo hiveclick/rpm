@@ -34,7 +34,6 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 /.
 
 %post
-useradd -g pmta -s /bin/false rad
+
 
 %postun
-userdel -r rad
