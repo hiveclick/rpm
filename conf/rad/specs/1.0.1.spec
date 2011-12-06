@@ -10,7 +10,7 @@ Group: Applications/Internet
 License: commercial
 Source: %{name}-%{version}.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
-BuildArch: noarch x86_64
+BuildArch: noarch x86_64 i386
 Requires: php php-gd
 
 %description
@@ -37,12 +37,12 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 if [ "$1" = "1" ]; then
   # Perform tasks to prepare for the initial installation
   echo "Installing rad user environment..."
-  useradd -g httpd -M -s /bin/false rad
+  useradd -g apache -M -s /bin/false rad
   
   # Create the log folder for rad
   if [ ! -d "$DIRECTORY" ]; then
 	  mkdir /var/log/rad
-	  chown rad:httpd /var/log/rad
+	  chown rad:apache /var/log/rad
 	  chmod 775 /var/log/rad
   fi
   
@@ -61,7 +61,7 @@ elif [ "$1" = "2" ]; then
   # Create the log folder for rad
   if [ ! -d "$DIRECTORY" ]; then
 	  mkdir /var/log/rad
-	  chown rad:httpd /var/log/rad
+	  chown rad:apache /var/log/rad
 	  chmod 775 /var/log/rad
   fi
   
