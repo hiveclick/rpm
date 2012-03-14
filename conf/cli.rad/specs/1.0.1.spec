@@ -55,6 +55,9 @@ if [ "$1" = "1" ]; then
   ln -s /home/rad/cli/webapp/meta/crons/server_status.sh /home/rad/cli/cli/server_status
   ln -s /home/rad/cli/webapp/meta/crons/pmta.sh /home/rad/cli/cli/pmta
   
+  # Reset permissions on the meta folder
+  chmod 777 /home/rad/cli/webapp/meta -Rf
+  
   # Copy the logrotate.d so that we can rotate our logs
   cp -f /home/rad/cli/init/config/logrotate /etc/logrotate.d/cli.rad
   
@@ -74,10 +77,13 @@ elif [ "$1" = "2" ]; then
   
   # Create the log folder for rad
   if [ ! -d "$DIRECTORY" ]; then
-	  mkdir /var/log/rad
+	  mkdir -p /var/log/rad
 	  chown rad:pmta /var/log/rad
 	  chmod 775 /var/log/rad
   fi
+  
+  # Reset permissions on the meta folder
+  chmod 777 /home/rad/cli/webapp/meta -Rf
   
   # Copy the logrotate.d so that we can rotate our logs
   rm -f /etc/logrotate.d/rad

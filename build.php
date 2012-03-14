@@ -95,11 +95,11 @@ $cmd = 'cp -Rf /usr/src/redhat/RPMS/noarch/*.rpm ' . $BUILDDIR . '/RPMS/';
 passthru($cmd);
 
 if (strtoupper(trim($upload_rpm)) == 'Y') {
-	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@core1.krypt.com:/var/www/sites/yum/CentOS/5/local/x86_64/RPMS/';
+	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@184.154.161.226:/var/www/sites/yum/CentOS/5/local/x86_64/RPMS/';
 	passthru($cmd);
-	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@core1.krypt.com:/var/www/sites/yum/CentOS/5/local/noarch/RPMS/';
+	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@184.154.161.226:/var/www/sites/yum/CentOS/5/local/noarch/RPMS/';
 	passthru($cmd);
-	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@core1.krypt.com:/var/www/sites/yum/CentOS/5/local/i386/RPMS/';
+	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@184.154.161.226:/var/www/sites/yum/CentOS/5/local/i386/RPMS/';
 	passthru($cmd);
 	echo "\n\n" . 'Run the following command to recompile your YUM repository:' . "\n" . 'createrepo /var/www/sites/yum/CentOS/5/local/x86_64/' . "\n" . 'createrepo /var/www/sites/yum/CentOS/5/local/noarch/' . "\n" . 'createrepo /var/www/sites/yum/CentOS/5/local/i386/' . "\n";
 } else {
