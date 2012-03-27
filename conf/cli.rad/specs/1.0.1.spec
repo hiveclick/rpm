@@ -10,7 +10,7 @@ Group: Applications/Internet
 License: commercial
 Source: %{name}-%{version}.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
-BuildArch: noarch x86_64
+BuildArch: noarch x86_64 i386
 Requires: php php-gd PowerMTA
 
 %description
