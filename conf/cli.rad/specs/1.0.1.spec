@@ -102,7 +102,7 @@ if [ "$1" = "0" ]; then
   rm -f /etc/cron.d/cli.rad
   rm -f /etc/logrotate.d/cli.rad
   rm -Rf /var/log/rad
-  userdel -r rad
+  rm -Rf /home/rad
 elif [ "$1" = "2" ]; then
   # Perform whatever maintenance must occur before the upgrade begins
   echo "Upgrading rad user environment..."

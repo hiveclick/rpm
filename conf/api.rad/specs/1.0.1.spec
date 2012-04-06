@@ -37,10 +37,12 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 if [ "$1" = "1" ]; then
   # Perform tasks to prepare for the initial installation
   echo "Installing rad user environment..."
-  useradd -g apache -M -s /bin/false rad
+  if [ "$(grep "rad" /etc/passwd | wc -l)" -eq 0 ]; then
+    useradd -g apache -M -r -s /bin/false rad
+  fi
   
   # Create the log folder for rad
-  if [ ! -d "$DIRECTORY" ]; then
+  if [ ! -d "/var/log/rad" ]; then
 	  mkdir /var/log/rad
 	  chown rad:apache /var/log/rad
 	  chmod 775 /var/log/rad
@@ -63,7 +65,7 @@ elif [ "$1" = "2" ]; then
   echo "Upgrading rad user environment..."
   
   # Create the log folder for rad
-  if [ ! -d "$DIRECTORY" ]; then
+  if [ ! -d "/var/log/rad" ]; then
 	  mkdir /var/log/rad
 	  chown rad:apache /var/log/rad
 	  chmod 775 /var/log/rad
@@ -90,7 +92,9 @@ if [ "$1" = "0" ]; then
   rm -f /etc/cron.d/api.rad
   rm -f /etc/logrotate.d/api.rad
   rm -Rf /var/log/rad
-  userdel -r rad
+  if [ "$(grep "rad" /etc/passwd | wc -l)" -gt 0 ]; then
+    userdel -r rad
+  fi
 elif [ "$1" = "2" ]; then
   # Perform whatever maintenance must occur before the upgrade begins
   echo "Upgrading rad user environment..."
