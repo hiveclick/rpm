@@ -68,6 +68,11 @@ elif [ "$1" = "2" ]; then
 	  chmod 775 /var/log/rad
   fi
   
+  if [ -d "/home/rad/admin" ]; then
+	  chown rad:apache /home/rad/admin
+	  chmod 775 /home/rad/admin
+  fi
+  
   # Copy the virtual host to apache so stuff works
   rm -f /etc/httpd/conf.d/rad.vhost.conf
   cp -f /home/rad/admin/init/config/virtualhost /etc/httpd/conf.d/rad.vhost.conf
@@ -86,6 +91,7 @@ if [ "$1" = "0" ]; then
   rm -f /etc/logrotate.d/rad
   rm -Rf /var/log/rad
   if [ "$(grep "rad" /etc/passwd | wc -l)" -gt 0 ]; then
+    chown rad:apache /home/rad
     userdel -r rad
   fi
 elif [ "$1" = "2" ]; then
