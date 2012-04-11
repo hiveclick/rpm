@@ -43,6 +43,10 @@ foreach ($settings['subversion'] as $key => $svn_array) {
 	echo "Working on " . $key . "\n";
 	$source_folder = $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $svn_array[1];
 	echo " - Exporting to: " . $source_folder . "\n";
+	if (file_exists($source_folder)) {
+		$cmd = 'rm -Rf ' . $source_folder;
+		passthru($cmd);
+	}
 	if (!file_exists($source_folder)) {
 		$cmd = 'mkdir -p ' . $source_folder;
 		passthru($cmd);
@@ -95,12 +99,23 @@ $cmd = 'cp -Rf /usr/src/redhat/RPMS/noarch/*.rpm ' . $BUILDDIR . '/RPMS/';
 passthru($cmd);
 
 if (strtoupper(trim($upload_rpm)) == 'Y') {
+	$cmd = 'ssh root@yum.radinteractive.net rm -f /var/www/sites/yum/CentOS/5/local/*/RPMS/' . $BASENAME . '*';
+	passthru($cmd);
+	
 	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@yum.radinteractive.net:/var/www/sites/yum/CentOS/5/local/x86_64/RPMS/';
 	passthru($cmd);
 	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@yum.radinteractive.net:/var/www/sites/yum/CentOS/5/local/noarch/RPMS/';
 	passthru($cmd);
 	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@yum.radinteractive.net:/var/www/sites/yum/CentOS/5/local/i386/RPMS/';
 	passthru($cmd);
+	
+	$cmd = 'ssh root@yum.radinteractive.net createrepo /var/www/sites/yum/CentOS/5/local/x86_64/';
+	passthru($cmd);
+	$cmd = 'ssh root@yum.radinteractive.net createrepo /var/www/sites/yum/CentOS/5/local/noarch/';
+	passthru($cmd);
+	$cmd = 'ssh root@yum.radinteractive.net createrepo /var/www/sites/yum/CentOS/5/local/i386/';
+	passthru($cmd);	
+	
 	echo "\n\n" . 'Run the following command to recompile your YUM repository:' . "\n" . 'createrepo /var/www/sites/yum/CentOS/5/local/x86_64/' . "\n" . 'createrepo /var/www/sites/yum/CentOS/5/local/noarch/' . "\n" . 'createrepo /var/www/sites/yum/CentOS/5/local/i386/' . "\n";
 } else {
 	echo 'RPM built in ' . $BUILDDIR . '/RPMS/' . "\n";

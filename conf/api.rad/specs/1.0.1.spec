@@ -33,6 +33,9 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 %files
 /.
 
+%config
+/home/rad/api/init/install.ini
+
 %post
 if [ "$1" = "1" ]; then
   # Perform tasks to prepare for the initial installation
@@ -49,7 +52,7 @@ if [ "$1" = "1" ]; then
   fi
   
   echo "Installing RAD for first time use..."
-  php /home/rad/api/init/install.sh
+  php /home/rad/api/init/install.sh silent
   
   # Copy the virtual host to apache so stuff works
   cp -f /home/rad/api/init/config/virtualhost /etc/httpd/conf.d/api.rad.vhost.conf
@@ -98,8 +101,8 @@ if [ "$1" = "0" ]; then
   rm -f /etc/logrotate.d/api.rad
   rm -Rf /var/log/rad
   if [ "$(grep "rad" /etc/passwd | wc -l)" -gt 0 ]; then
-    chown rad:apache /home/rad
-    userdel -r rad
+    chown rad:apache /home/rad/api
+    userdel -rf rad
   fi
 elif [ "$1" = "2" ]; then
   # Perform whatever maintenance must occur before the upgrade begins
