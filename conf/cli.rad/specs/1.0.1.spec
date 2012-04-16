@@ -33,6 +33,9 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 %files
 /.
 
+%config /home/rad/cli/init/install.ini
+%config /home/rad/cli/webapp/config/*
+
 %post
 if [ "$1" = "1" ]; then
   # Perform tasks to prepare for the initial installation
@@ -47,7 +50,7 @@ if [ "$1" = "1" ]; then
   fi
   
   echo "Installing RAD for first time use..."
-  php /home/rad/cli/init/install.sh
+  php /home/rad/cli/init/install.sh silent
   
   # Link common cli commands to the cli folder
   ln -s /home/rad/cli/webapp/meta/crons/feeder_daemon.sh /home/rad/cli/cli/feeder_daemon
@@ -67,13 +70,13 @@ elif [ "$1" = "2" ]; then
   # Perform whatever maintenance must occur before the upgrade begins
   echo "Upgrading rad user environment..."
   rm -f /home/rad/cli/cli/feeder_daemon
-  ln -s /home/rad/cli/webapp/meta/crons/feeder_daemon.sh /home/rad/cli/cli/feeder_daemon
+  ln -s /home/rad/cli/webapp/meta/crons/feeder_daemon.sh /home/rad/cli/cli/feeder_daemon.sh
   rm -f /home/rad/cli/cli/ttd_daemon
-  ln -s /home/rad/cli/webapp/meta/crons/feeder_top_tier_domain_daemon.sh /home/rad/cli/cli/ttd_daemon
+  ln -s /home/rad/cli/webapp/meta/crons/feeder_top_tier_domain_daemon.sh /home/rad/cli/cli/ttd_daemon.sh
   rm -f /home/rad/cli/cli/server_status
-  ln -s /home/rad/cli/webapp/meta/crons/server_status.sh /home/rad/cli/cli/server_status
+  ln -s /home/rad/cli/webapp/meta/crons/server_status.sh /home/rad/cli/cli/server_status.sh
   rm -f /home/rad/cli/cli/pmta
-  ln -s /home/rad/cli/webapp/meta/crons/pmta.sh /home/rad/cli/cli/pmta
+  ln -s /home/rad/cli/webapp/meta/crons/pmta.sh /home/rad/cli/cli/pmta.sh
   
   # Create the log folder for rad
   if [ ! -d "$DIRECTORY" ]; then

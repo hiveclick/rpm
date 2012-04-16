@@ -33,8 +33,8 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 %files
 /.
 
-%config
-/home/rad/api/init/install.ini
+%config /home/rad/api/init/install.ini
+%config /home/rad/api/webapp/config/*
 
 %post
 if [ "$1" = "1" ]; then
@@ -78,10 +78,6 @@ elif [ "$1" = "2" ]; then
 	  chown rad:apache /home/rad/api
 	  chmod 775 /home/rad/api
   fi
-  
-  # Copy the virtual host to apache so stuff works
-  rm -f /etc/httpd/conf.d/rad.vhost.conf
-  cp -f /home/rad/api/init/config/virtualhost /etc/httpd/conf.d/api.rad.vhost.conf
   
   # Copy the logrotate.d so that we can rotate our logs
   rm -f /etc/logrotate.d/rad

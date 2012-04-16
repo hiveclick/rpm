@@ -33,6 +33,9 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 %files
 /.
 
+%config /home/rad/api/init/install.ini
+%config /home/rad/api/webapp/config/*
+
 %post
 if [ "$1" = "1" ]; then
   # Perform tasks to prepare for the initial installation
@@ -47,14 +50,19 @@ if [ "$1" = "1" ]; then
   fi
   
   echo "Installing RAD for first time use..."
-  php /var/www/sites/rad/unsub/init/install.sh
+  php /home/rad/unsub/init/install.sh
   
   # Copy the logrotate.d so that we can rotate our logs
-  cp -f /var/www/sites/rad/unsub/init/config/logrotate /etc/logrotate.d/unsub.rad
+  cp -f /home/rad/unsub/init/config/logrotate /etc/logrotate.d/unsub.rad
 
 elif [ "$1" = "2" ]; then
   # Perform whatever maintenance must occur before the upgrade begins
   echo "Upgrading rad user environment..."
+  
+  if [ -d "/home/rad/unsub" ]; then
+	  chown rad:apache /home/rad/unsub
+	  chmod 775 /home/rad/unsub
+  fi
   
   # Create the log folder for rad
   if [ ! -d "$DIRECTORY" ]; then
@@ -65,7 +73,7 @@ elif [ "$1" = "2" ]; then
   
   # Copy the logrotate.d so that we can rotate our logs
   rm -f /etc/logrotate.d/rad
-  cp -f /var/www/sites/rad/unsub/init/config/logrotate /etc/logrotate.d/unsub.rad
+  cp -f /home/rad/unsub/init/config/logrotate /etc/logrotate.d/unsub.rad
 fi
 
 
@@ -75,7 +83,10 @@ if [ "$1" = "0" ]; then
   echo "Removing rad user environment..."
   rm -f /etc/logrotate.d/unsub.rad
   rm -Rf /var/log/rad
-  userdel -r rad
+  if [ "$(grep "rad" /etc/passwd | wc -l)" -gt 0 ]; then
+    chown rad:apache /home/rad/unsub
+    userdel -rf rad
+  fi
 elif [ "$1" = "2" ]; then
   # Perform whatever maintenance must occur before the upgrade begins
   echo "Upgrading rad user environment..."

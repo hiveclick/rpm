@@ -33,8 +33,8 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 %files
 /.
 
-%config
-/home/rad/admin/init/install.ini
+%config /home/rad/admin/init/install.ini
+%config /home/rad/admin/webapp/config/*
 
 %post
 if [ "$1" = "1" ]; then
