@@ -33,67 +33,47 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 %files
 /.
 
-%config /home/rad/admin/init/install.ini
-%config /home/rad/admin/webapp/config/*
+%config(noreplace) /home/rad/admin/init/install.ini
+%config(noreplace) /home/rad/admin/webapp/config/*
+%config(noreplace) /etc/cron.d/rad
+%config(noreplace) /etc/logrotate.d/rad
+
+%defattr(775, rad, apache, 775)
+
+%pre
+if [ "$1" = "1" ]; then
+  if [ `grep -c ^rad /etc/passwd` = "0" ]; then
+    /usr/sbin/useradd -c 'RAD User' -d /home/rad -g apache -M -r -s /bin/false rad
+  fi
+fi
 
 %post
 if [ "$1" = "1" ]; then
   # Perform tasks to prepare for the initial installation
-  echo "Installing rad user environment..."
-  if [ "$(grep "rad" /etc/passwd | wc -l)" -eq 0 ]; then
-  	useradd -g apache -M -r -s /bin/false rad
-  fi
+  # echo "Installing rad user environment..."
   
-  # Create the log folder for rad
-  if [ ! -d "/var/log/rad" ]; then
-	  mkdir /var/log/rad
-	  chown rad:apache /var/log/rad
-	  chmod 775 /var/log/rad
-  fi
+  # copy over the install.ini only the first time
+  cp /home/rad/admin/init/install_sample.ini /home/rad/admin/init/install.ini
   
   echo "Installing RAD for first time use..."
   php /home/rad/admin/init/install.sh silent
   
-  # Copy the virtual host to apache so stuff works
-  cp -f /home/rad/admin/init/config/virtualhost /etc/httpd/conf.d/rad.vhost.conf
-  
-  # Copy the logrotate.d so that we can rotate our logs
-  cp -f /home/rad/admin/init/config/logrotate /etc/logrotate.d/rad
-
-elif [ "$1" = "2" ]; then
+  echo "Thank you for installing the unsub.rad package.  You need to setup a"
+  echo "virtual host and add your API server url to the install.ini file.  A"
+  echo "sample virtual host configuration is located in:"
+  echo ""
+  echo "/home/rad/admin/init/config/virtualhost"
+#elif [ "$1" = "2" ]; then
   # Perform whatever maintenance must occur before the upgrade begins
-  echo "Upgrading rad user environment..."
-  
-  # Create the log folder for rad
-  if [ ! -d "/var/log/rad" ]; then
-	  mkdir /var/log/rad
-	  chown rad:apache /var/log/rad
-	  chmod 775 /var/log/rad
-  fi
-  
-  if [ -d "/home/rad/admin" ]; then
-	  chown rad:apache /home/rad/admin
-	  chmod 775 /home/rad/admin
-  fi
-  
-  # Copy the virtual host to apache so stuff works
-  rm -f /etc/httpd/conf.d/rad.vhost.conf
-  cp -f /home/rad/admin/init/config/virtualhost /etc/httpd/conf.d/rad.vhost.conf
-  
-  # Copy the logrotate.d so that we can rotate our logs
-  rm -f /etc/logrotate.d/rad
-  cp -f /home/rad/admin/init/config/logrotate /etc/logrotate.d/rad
-
+  # echo "Upgrading rad user environment..."
 fi
 
 
 %postun
-if [ "$1" = "0" ]; then
+#if [ "$1" = "0" ]; then
   # Perform tasks to prepare for the final uninstallation
-  echo "Removing rad user environment..."
-  rm -f /etc/logrotate.d/rad
-  rm -Rf /var/log/rad
-elif [ "$1" = "2" ]; then
+  # echo "Removing rad user environment..."
+#elif [ "$1" = "2" ]; then
   # Perform whatever maintenance must occur before the upgrade begins
-  echo "Upgrading rad user environment..."
-fi
+  # echo "Removing rad user environment for upgrade..."
+#fi

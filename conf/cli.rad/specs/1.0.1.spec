@@ -33,80 +33,53 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 %files
 /.
 
-%config /home/rad/cli/init/install.ini
-%config /home/rad/cli/webapp/config/*
+%config(noreplace) /home/rad/cli/init/install.ini
+%config(noreplace) /home/rad/cli/webapp/config/*
+%config(noreplace) /etc/cron.d/cli.rad
+%config(noreplace) /etc/logrotate.d/cli.rad
+
+%defattr(775, rad, pmta, 775)
+
+%pre
+if [ "$1" = "1" ]; then
+  if [ `grep -c ^rad /etc/passwd` = "0" ]; then
+    /usr/sbin/useradd -c 'RAD User' -d /home/rad -g pmta -M -r -s /bin/false rad
+  fi
+fi
 
 %post
 if [ "$1" = "1" ]; then
   # Perform tasks to prepare for the initial installation
-  echo "Installing rad user environment..."
-  useradd -g pmta -M -s /bin/false rad
+  # echo "Installing rad user environment..."
+    
+  # copy over the install.ini only the first time
+  cp /home/rad/cli/init/install_sample.ini /home/rad/cli/init/install.ini
   
-  # Create the log folder for rad
-  if [ ! -d "$DIRECTORY" ]; then
-	  mkdir /var/log/rad
-	  chown rad:pmta /var/log/rad
-	  chmod 775 /var/log/rad
-  fi
+  # Link common cli commands to the cli folder
+  ln -s /home/rad/cli/webapp/meta/crons/feeder_daemon.sh /home/rad/cli/cli/auto_feeder.sh
+  ln -s /home/rad/cli/webapp/meta/crons/feeder_top_tier_domain_daemon.sh /home/rad/cli/cli/auto_prefeeder.sh
+  ln -s /home/rad/cli/webapp/meta/crons/server_status.sh /home/rad/cli/cli/server_status.sh
+  ln -s /home/rad/cli/webapp/meta/crons/pmta.sh /home/rad/cli/cli/pmta.sh
   
   echo "Installing RAD for first time use..."
   php /home/rad/cli/init/install.sh silent
   
-  # Link common cli commands to the cli folder
-  ln -s /home/rad/cli/webapp/meta/crons/feeder_daemon.sh /home/rad/cli/cli/feeder_daemon
-  ln -s /home/rad/cli/webapp/meta/crons/feeder_top_tier_domain_daemon.sh /home/rad/cli/cli/ttd_daemon
-  ln -s /home/rad/cli/webapp/meta/crons/server_status.sh /home/rad/cli/cli/server_status
-  ln -s /home/rad/cli/webapp/meta/crons/pmta.sh /home/rad/cli/cli/pmta
-  
-  # Reset permissions on the meta folder
-  chmod 777 /home/rad/cli/webapp/meta -Rf
-  
-  # Copy the logrotate.d so that we can rotate our logs
-  cp -f /home/rad/cli/init/config/logrotate /etc/logrotate.d/cli.rad
-  
-  # Copy the crontab so that we can start our processes
-  cp -f /home/rad/cli/init/config/crontab /etc/cron.d/rad
-elif [ "$1" = "2" ]; then
+  echo "Thank you for installing the cli.rad package.  You need to setup"
+  echo "PowerMTA and add your API server url to the install.ini file.  A"
+  echo "script to install PowerMTA is located in:"
+  echo ""
+  echo "/home/rad/cli/init/install_pmta.sh"
+#elif [ "$1" = "2" ]; then
   # Perform whatever maintenance must occur before the upgrade begins
-  echo "Upgrading rad user environment..."
-  rm -f /home/rad/cli/cli/feeder_daemon
-  ln -s /home/rad/cli/webapp/meta/crons/feeder_daemon.sh /home/rad/cli/cli/feeder_daemon.sh
-  rm -f /home/rad/cli/cli/ttd_daemon
-  ln -s /home/rad/cli/webapp/meta/crons/feeder_top_tier_domain_daemon.sh /home/rad/cli/cli/ttd_daemon.sh
-  rm -f /home/rad/cli/cli/server_status
-  ln -s /home/rad/cli/webapp/meta/crons/server_status.sh /home/rad/cli/cli/server_status.sh
-  rm -f /home/rad/cli/cli/pmta
-  ln -s /home/rad/cli/webapp/meta/crons/pmta.sh /home/rad/cli/cli/pmta.sh
-  
-  # Create the log folder for rad
-  if [ ! -d "$DIRECTORY" ]; then
-	  mkdir -p /var/log/rad
-	  chown rad:pmta /var/log/rad
-	  chmod 775 /var/log/rad
-  fi
-  
-  # Reset permissions on the meta folder
-  chmod 777 /home/rad/cli/webapp/meta -Rf
-  
-  # Copy the logrotate.d so that we can rotate our logs
-  rm -f /etc/logrotate.d/rad
-  cp -f /home/rad/cli/init/config/logrotate /etc/logrotate.d/cli.rad
-  
-  # Copy the crontab so that we can start our processes
-  rm -f /etc/cron.d/rad
-  cp -f /home/rad/cli/init/config/crontab /etc/cron.d/cli.rad
+  # echo "Upgrading rad user environment..."
 fi
 
 
 %postun
-if [ "$1" = "0" ]; then
+#if [ "$1" = "0" ]; then
   # Perform tasks to prepare for the final uninstallation
-  echo "Removing rad user environment..."
-  rm -f /etc/cron.d/cli.rad
-  rm -f /etc/logrotate.d/cli.rad
-  rm -Rf /var/log/rad
-  rm -Rf /home/rad
-elif [ "$1" = "2" ]; then
+  # echo "Removing rad user environment..."
+#elif [ "$1" = "2" ]; then
   # Perform whatever maintenance must occur before the upgrade begins
-  echo "Upgrading rad user environment..."
-fi
+  # echo "Removing rad user environment for upgrade..."
+#fi

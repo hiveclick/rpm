@@ -58,16 +58,35 @@ foreach ($settings['subversion'] as $key => $svn_array) {
 
 foreach ($settings['support_files'] as $key => $files) {
 	echo "Working on " . $key . "\n";
-	if (file_exists($BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $settings['root_folder'] . $files[0])) {
+	if (file_exists($BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $settings['root_folder'] . '/' . $files[0])) {
 		echo " - Exporting to: " . $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $files[1] . "\n";
 		$source_folder = dirname($BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $files[1]);
 		if (!file_exists($source_folder)) {
 			$cmd = 'mkdir -p ' . $source_folder;
 			passthru($cmd);
 		}
-		$cmd = 'cp ' . $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $settings['root_folder'] . $files[0] . ' ' . $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $files[1];
+		$cmd = 'cp ' . $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $settings['root_folder'] . '/' . $files[0] . ' ' . $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $files[1];
+		passthru($cmd);
+	} else {
+		echo ' - Source file does not exist: ' . $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $settings['root_folder'] . $files[0] . "\n";
+		die();
+	}
+}
+
+foreach ($settings['support_folders'] as $key => $folder_name) {
+	echo "Working on " . $key . "\n";
+	$source_folder = dirname($BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $folder_name[0]);
+	if (!file_exists($source_folder)) {
+		$cmd = 'mkdir -p ' . $source_folder;
 		passthru($cmd);
 	}
+}
+
+// Remove the install.ini file
+$install_source_file = $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $settings['root_folder'] . '/init/install.ini';
+if (file_exists($install_source_file)) {
+	$cmd = 'rm -f ' . $install_source_file;
+	shell_exec($cmd);
 }
 
 if (file_exists(dirname(__FILE__) . '/conf/' . $conf_dir . '/specs/' . $spec_file)) {
@@ -84,7 +103,7 @@ $cmd = 'tar -cPf ' . $BASENAME . '-' . $VERSION . '.tar ' . ' -C ' . $BUILDDIR .
 echo $cmd . "\n";
 passthru($cmd);
 
-$cmd = 'gzip ' . $BASENAME . '-' . $VERSION . '.tar';
+$cmd = 'gzip -f ' . $BASENAME . '-' . $VERSION . '.tar';
 echo $cmd . "\n";
 passthru($cmd);
 
