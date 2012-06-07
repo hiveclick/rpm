@@ -32,16 +32,19 @@ while (($upload_rpm = StringTools::consolePrompt('> Do you want to upload the RP
 
 $spec_file = $VERSION . '.spec';
 
-
+// Output the introduction
 $intro = 'This script will build the RPM for the ' . StringTools::consoleColor($settings['name'], StringTools::CONSOLE_COLOR_YELLOW) . ' project';
 echo $intro . "\n";
 
 $cmd = 'svn info ' . $settings['revision_url'] . ' | grep "Revision: " | awk \'{print $2}\'';
 $revision = intval(trim(shell_exec($cmd)));
 
+$base_dir = $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION;
+
+// Extract the subversion files
 foreach ($settings['subversion'] as $key => $svn_array) {
 	echo "Working on " . $key . "\n";
-	$source_folder = $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $svn_array[1];
+	$source_folder = $base_dir . $svn_array[1];
 	echo " - Exporting to: " . $source_folder . "\n";
 	if (file_exists($source_folder)) {
 		$cmd = 'rm -Rf ' . $source_folder;
@@ -56,26 +59,28 @@ foreach ($settings['subversion'] as $key => $svn_array) {
 	passthru($cmd);
 }
 
+// Extract the support files
 foreach ($settings['support_files'] as $key => $files) {
 	echo "Working on " . $key . "\n";
-	if (file_exists($BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $settings['root_folder'] . '/' . $files[0])) {
-		echo " - Exporting to: " . $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $files[1] . "\n";
-		$source_folder = dirname($BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $files[1]);
+	if (file_exists($base_dir . $settings['root_folder'] . '/' . $files[0])) {
+		echo " - Exporting to: " . $base_dir . $files[1] . "\n";
+		$source_folder = dirname($base_dir . $files[1]);
 		if (!file_exists($source_folder)) {
 			$cmd = 'mkdir -p ' . $source_folder;
 			passthru($cmd);
 		}
-		$cmd = 'cp ' . $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $settings['root_folder'] . '/' . $files[0] . ' ' . $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $files[1];
+		$cmd = 'cp ' . $base_dir . $settings['root_folder'] . '/' . $files[0] . ' ' . $base_dir . $files[1];
 		passthru($cmd);
 	} else {
-		echo ' - Source file does not exist: ' . $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $settings['root_folder'] . $files[0] . "\n";
+		echo ' - Source file does not exist: ' . $base_dir . $settings['root_folder'] . $files[0] . "\n";
 		die();
 	}
 }
 
+// Extract the support folders
 foreach ($settings['support_folders'] as $key => $folder_name) {
-	echo "Working on " . $key . "\n";
-	$source_folder = dirname($BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $folder_name[0]);
+	echo "Working on " . $key .  " => " . $folder_name[0] . "\n";
+	$source_folder = $base_dir . $folder_name[0];
 	if (!file_exists($source_folder)) {
 		$cmd = 'mkdir -p ' . $source_folder;
 		passthru($cmd);
@@ -83,9 +88,15 @@ foreach ($settings['support_folders'] as $key => $folder_name) {
 }
 
 // Remove the install.ini file
-$install_source_file = $BUILDDIR . '/SOURCES/' . $BASENAME . '-' . $VERSION . $settings['root_folder'] . '/init/install.ini';
+$install_source_file = $base_dir . $settings['root_folder'] . '/init/install.ini';
 if (file_exists($install_source_file)) {
 	$cmd = 'rm -f ' . $install_source_file;
+	shell_exec($cmd);
+}
+
+if (isset($settings['use_zend_guard']) && ($settings['use_zend_guard'] == 1)) {
+	// Use Zend Guard to encode this project
+	$cmd = '/usr/local/Zend/ZendGuard-5_5_0/plugins/com.zend.guard.core.resources.linux.x86_5.5.0/resources/bin/zendenc53 --delete-source --short-tags on --expires 2012-07-01 --recursive --ignore-errors ' . $base_dir;
 	shell_exec($cmd);
 }
 
@@ -97,9 +108,11 @@ if (file_exists(dirname(__FILE__) . '/conf/' . $conf_dir . '/specs/' . $spec_fil
 	file_put_contents($BUILDDIR . '/SPECS/' . $BASENAME . '-' . $spec_file, $spec);
 }
 
+
+
 echo ' - Tar/Gzipping' . "\n";
 
-$cmd = 'tar -cPf ' . $BASENAME . '-' . $VERSION . '.tar ' . ' -C ' . $BUILDDIR . '/SOURCES/ ' . $BASENAME . '-' . $VERSION;
+$cmd = 'tar -cPf ' . $BASENAME . '-' . $VERSION . '.tar ' . ' -C ' . dirname($base_dir) . ' ' . basename($base_dir);
 echo $cmd . "\n";
 passthru($cmd);
 
@@ -135,7 +148,7 @@ if (strtoupper(trim($upload_rpm)) == 'Y') {
 	$cmd = 'ssh root@yum.radinteractive.net createrepo /var/www/sites/yum/CentOS/5/local/i386/';
 	passthru($cmd);	
 	
-	echo "\n\n" . 'Run the following command to recompile your YUM repository:' . "\n" . 'createrepo /var/www/sites/yum/CentOS/5/local/x86_64/' . "\n" . 'createrepo /var/www/sites/yum/CentOS/5/local/noarch/' . "\n" . 'createrepo /var/www/sites/yum/CentOS/5/local/i386/' . "\n";
+	echo 'Done building ' . $BASENAME . ' rpm' . "\n";
 } else {
 	echo 'RPM built in ' . $BUILDDIR . '/RPMS/' . "\n";
 	passthru('ls -lh ' . $BUILDDIR . '/RPMS/');

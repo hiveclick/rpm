@@ -33,17 +33,23 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 %files
 /.
 
-%config(noreplace) /home/rad/admin/init/install.ini
+%defattr(775, rad, apache, 775)
+
 %config(noreplace) /home/rad/admin/webapp/config/*
 %config(noreplace) /etc/cron.d/rad
 %config(noreplace) /etc/logrotate.d/rad
 
-%defattr(775, rad, apache, 775)
+%attr(775, rad, apache) /home/rad/admin
+%attr(775, rad, apache) /var/log/rad
+%attr(644, root, root) /etc/cron.d/rad
+%attr(644, root, root) /etc/logrotate.d/rad
 
 %pre
 if [ "$1" = "1" ]; then
   if [ `grep -c ^rad /etc/passwd` = "0" ]; then
-    /usr/sbin/useradd -c 'RAD User' -d /home/rad -g apache -M -r -s /bin/false rad
+    /usr/sbin/useradd -c 'RAD User' -d /home/rad -g apache -m -s /bin/false rad 2>&1
+    /bin/chmod 770 /home/rad
+    /bin/chmod g+s /home/rad
   fi
 fi
 
@@ -55,25 +61,23 @@ if [ "$1" = "1" ]; then
   # copy over the install.ini only the first time
   cp /home/rad/admin/init/install_sample.ini /home/rad/admin/init/install.ini
   
-  echo "Installing RAD for first time use..."
+  echo ""
+  echo "    Installing RAD for first time use..."
   php /home/rad/admin/init/install.sh silent
   
-  echo "Thank you for installing the unsub.rad package.  You need to setup a"
-  echo "virtual host and add your API server url to the install.ini file.  A"
-  echo "sample virtual host configuration is located in:"
   echo ""
-  echo "/home/rad/admin/init/config/virtualhost"
-#elif [ "$1" = "2" ]; then
-  # Perform whatever maintenance must occur before the upgrade begins
-  # echo "Upgrading rad user environment..."
+  echo "    Thank you for installing the unsub.rad package.  You need to setup a"
+  echo "    virtual host and add your API server url to the install.ini file.  A"
+  echo "    sample virtual host configuration is located in:"
+  echo ""
+  echo "      /home/rad/admin/init/config/virtualhost"
+elif [ "$1" = "2" ]; then
+  echo "    Applying updates to RAD..."
+  php /home/rad/admin/init/upgrade.sh silent
 fi
 
 
 %postun
 #if [ "$1" = "0" ]; then
-  # Perform tasks to prepare for the final uninstallation
-  # echo "Removing rad user environment..."
 #elif [ "$1" = "2" ]; then
-  # Perform whatever maintenance must occur before the upgrade begins
-  # echo "Removing rad user environment for upgrade..."
 #fi
