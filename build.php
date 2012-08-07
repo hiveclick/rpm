@@ -131,9 +131,11 @@ $cmd = 'cp -Rf /usr/src/redhat/RPMS/noarch/*.rpm ' . $BUILDDIR . '/RPMS/';
 passthru($cmd);
 
 if (strtoupper(trim($upload_rpm)) == 'Y') {
+	echo "Removing older revisions..." . "\n";
 	$cmd = 'ssh root@yum.radinteractive.net rm -f /var/www/sites/yum/CentOS/5/local/*/RPMS/' . $BASENAME . '*';
 	passthru($cmd);
 	
+	echo "Uploading new revisions..." . "\n";
 	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@yum.radinteractive.net:/var/www/sites/yum/CentOS/5/local/x86_64/RPMS/';
 	passthru($cmd);
 	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@yum.radinteractive.net:/var/www/sites/yum/CentOS/5/local/noarch/RPMS/';
@@ -141,6 +143,7 @@ if (strtoupper(trim($upload_rpm)) == 'Y') {
 	$cmd = 'scp ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@yum.radinteractive.net:/var/www/sites/yum/CentOS/5/local/i386/RPMS/';
 	passthru($cmd);
 	
+	echo "Rebuilding Repositories..." . "\n";	
 	$cmd = 'ssh root@yum.radinteractive.net createrepo /var/www/sites/yum/CentOS/5/local/x86_64/';
 	passthru($cmd);
 	$cmd = 'ssh root@yum.radinteractive.net createrepo /var/www/sites/yum/CentOS/5/local/noarch/';
