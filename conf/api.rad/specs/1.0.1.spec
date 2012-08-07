@@ -11,7 +11,7 @@ License: commercial
 Source: %{name}-%{version}.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 BuildArch: noarch x86_64 i386
-Requires: httpd php php-gd php-mysql mysql-server
+Requires: httpd php php-gd php-mysql mysql-server php-imap
 
 %description
 Provides an api interface to the Rad Feeder
@@ -40,6 +40,10 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 %config(noreplace) /etc/logrotate.d/api.rad
 
 %attr(775, rad, apache) /home/rad/api
+%attr(777, rad, apache) /home/rad/api/webapp/meta/uploads
+%attr(777, rad, apache) /home/rad/api/webapp/meta/imports
+%attr(777, rad, apache) /home/rad/api/webapp/meta/exports
+%attr(4755, rad, apache) /home/rad/api/webapp/meta/crons/
 %attr(775, rad, apache) /var/log/rad
 %attr(644, root, root) /etc/cron.d/api.rad
 %attr(644, root, root) /etc/logrotate.d/api.rad

@@ -63,7 +63,7 @@ if [ "$1" = "1" ]; then
   
   # Link common cli commands to the cli folder
   ln -sf /home/rad/cli/webapp/meta/crons/feeder_daemon.sh /home/rad/cli/cli/auto_feeder.sh
-  ln -sf /home/rad/cli/webapp/meta/crons/feeder_top_tier_domain_daemon.sh /home/rad/cli/cli/auto_prefeeder.sh
+  ln -sf /home/rad/cli/webapp/meta/crons/prefeeder_daemon.sh /home/rad/cli/cli/auto_prefeeder.sh
   ln -sf /home/rad/cli/webapp/meta/crons/server_status.sh /home/rad/cli/cli/server_status.sh
   ln -sf /home/rad/cli/webapp/meta/crons/pmta.sh /home/rad/cli/cli/pmta.sh
   

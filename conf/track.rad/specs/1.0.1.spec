@@ -11,7 +11,7 @@ License: commercial
 Source: %{name}-%{version}.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 BuildArch: noarch x86_64 i386
-Requires: php httpd
+Requires: php httpd php-gd php-mysql mysql-server
 
 %description
 Provides a redirect tracking site for the Rad Feeder
@@ -38,6 +38,9 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 %config(noreplace) /home/rad/track/webapp/config/*
 
 %attr(775, rad, apache) /home/rad/track
+%attr(777, rad, apache) /home/rad/track/webapp/meta/exports
+%attr(777, rad, apache) /home/rad/track/webapp/meta/exports/openers
+%attr(777, rad, apache) /home/rad/track/webapp/meta/exports/clickers
 
 %pre
 if [ "$1" = "1" ]; then
