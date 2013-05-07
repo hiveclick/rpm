@@ -70,7 +70,12 @@ if [ "$1" = "1" ]; then
   echo "    sample virtual host configuration is located in:"
   echo ""
   echo "      /home/rad/unsub/init/config/virtualhost"
-#elif [ "$1" = "2" ]; then
+  
+  # Remove the cache files so new forms and models load correctly
+  /bin/rm -Rf /home/rad/unsub/webapp/cache/*
+elif [ "$1" = "2" ]; then
+  # Remove the cache files so new forms and models load correctly
+  /bin/rm -Rf /home/rad/unsub/webapp/cache/*
 fi
 
 

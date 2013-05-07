@@ -11,7 +11,7 @@ License: commercial
 Source: %{name}-%{version}.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 BuildArch: noarch x86_64 i386
-Requires: php postfix
+Requires: php postfix dovecot
 
 %description
 Provides bounce parsing and postfix syncing for Rad
@@ -39,6 +39,7 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 %config(noreplace) /etc/cron.d/bounce.rad
 
 %attr(775, rad, apache) /home/rad/bounce
+%attr(777, rad, apache) /home/rad/bounce/webapp/meta/exports/fbl
 %attr(644, root, root) /etc/cron.d/bounce.rad
 
 %pre
@@ -65,7 +66,10 @@ if [ "$1" = "1" ]; then
   echo ""
   echo "    Thank you for installing the bounce.rad package.  You may need to"
   echo "    configure Postfix to accept mail from the internet.  All your "
-  echo "    domains will be synced to Postfix automatically at night."
+  echo "    domains will be synced to Postfix automatically at night.  You can"
+  echo "    refer to the following file when configuring Postfix:"
+  echo ""
+  echo "    /home/rad/bounce/init/postfix.txt"
   echo ""
 #elif [ "$1" = "2" ]; then
 fi

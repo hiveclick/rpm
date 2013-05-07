@@ -11,7 +11,7 @@ License: commercial
 Source: %{name}-%{version}.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 BuildArch: noarch x86_64 i386
-Requires: which nc php >= 5.3
+Requires: which nc unix2dos php >= 5.3
 
 %description
 Allows for testing of ip addresses

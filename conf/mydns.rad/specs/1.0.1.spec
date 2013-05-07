@@ -34,8 +34,11 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 /.
 
 %defattr(775, rad, apache, 775)
+%config(noreplace) /home/rad/mydns/webapp/config/*
+%config(noreplace) /etc/cron.d/mydns.rad
 
 %attr(775, rad, apache) /home/rad/mydns
+%attr(644, root, root) /etc/cron.d/mydns.rad
 
 %pre
 if [ "$1" = "1" ]; then
@@ -50,6 +53,9 @@ fi
 if [ "$1" = "1" ]; then
   # Perform tasks to prepare for the initial installation
   # echo "Installing rad user environment..."
+  
+  # copy over the install.ini only the first time
+  cp /home/rad/mydns/init/install_sample.ini /home/rad/mydns/init/install.ini
   
   echo ""
   echo "    Installing RAD for first time use..."
@@ -68,7 +74,12 @@ if [ "$1" = "1" ]; then
   echo "    following the steps here:"
   echo ""
   echo "      /home/rad/mydns/INSTALL.txt"
-#elif [ "$1" = "2" ]; then
+  
+  # Remove the cache files so new forms and models load correctly
+  /bin/rm -Rf /home/rad/mydns/webapp/cache/*
+elif [ "$1" = "2" ]; then
+  # Remove the cache files so new forms and models load correctly
+  /bin/rm -Rf /home/rad/mydns/webapp/cache/*
 fi
 
 

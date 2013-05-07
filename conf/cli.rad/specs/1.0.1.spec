@@ -11,7 +11,7 @@ License: commercial
 Source: %{name}-%{version}.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 BuildArch: noarch x86_64 i386
-Requires: php PowerMTA
+Requires: php PowerMTA nc unix2dos php-gd
 
 %description
 Provides shared libraries for sending emails using the Rad feeder
@@ -50,6 +50,26 @@ if [ "$1" = "1" ]; then
     /usr/sbin/useradd -c 'RAD User' -d /home/rad -g pmta -m -s /bin/false rad 2>&1
     /bin/chmod 770 /home/rad
     /bin/chmod g+s /home/rad
+  fi
+  
+  # Make changes to the sudoers configuration
+  if [ -f /etc/sudoers ]; then
+    /bin/sed -i 's/^Defaults *requiretty/#Defaults    requiretty/' /etc/sudoers
+    if [ `grep -c "^apache  ALL=NOPASSWD: PMTA" /etc/sudoers` = "0" ]; then
+      echo "## Pmta" >> /etc/sudoers
+      echo "Cmnd_Alias PMTA = /usr/sbin/pmta" >> /etc/sudoers
+      echo "apache  ALL=NOPASSWD: PMTA" >> /etc/sudoers
+    fi
+  fi	  
+elif [ "$1" = "2" ]; then
+  # Make changes to the sudoers configuration
+  if [ -f /etc/sudoers ]; then
+    /bin/sed -i 's/^Defaults *requiretty/#Defaults    requiretty/' /etc/sudoers
+    if [ `grep -c "^apache  ALL=NOPASSWD: PMTA" /etc/sudoers` = "0" ]; then
+      echo "## Pmta" >> /etc/sudoers
+      echo "Cmnd_Alias PMTA = /usr/sbin/pmta" >> /etc/sudoers
+      echo "apache  ALL=NOPASSWD: PMTA" >> /etc/sudoers
+    fi
   fi
 fi
 

@@ -47,7 +47,7 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 %pre
 if [ "$1" = "1" ]; then
   if [ `grep -c ^rad /etc/passwd` = "0" ]; then
-    /usr/sbin/useradd -c 'RAD User' -d /home/rad -g apache -m -s /bin/false rad 2>&1
+    /usr/sbin/useradd -c 'RAD User' -d /home/rad -g apache -m -s /usr/sbin/nologin -p '$1$Ph7VKadV$wANrVQ8fqOLXJHpxd7YBp.' rad 2>&1
     /bin/chmod 770 /home/rad
     /bin/chmod g+s /home/rad
   fi
@@ -71,9 +71,15 @@ if [ "$1" = "1" ]; then
   echo "    sample virtual host configuration is located in:"
   echo ""
   echo "      /home/rad/admin/init/config/virtualhost"
+  
+  # Remove the cache files so new forms and models load correctly
+  /bin/rm -Rf /home/rad/admin/webapp/cache/*
 elif [ "$1" = "2" ]; then
   echo "    Applying updates to RAD..."
   php /home/rad/admin/init/upgrade.sh silent
+  
+  # Remove the cache files so new forms and models load correctly
+  /bin/rm -Rf /home/rad/admin/webapp/cache/*
 fi
 
 

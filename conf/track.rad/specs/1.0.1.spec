@@ -41,6 +41,7 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 %attr(777, rad, apache) /home/rad/track/webapp/meta/exports
 %attr(777, rad, apache) /home/rad/track/webapp/meta/exports/openers
 %attr(777, rad, apache) /home/rad/track/webapp/meta/exports/clickers
+%attr(644, root, root) /etc/cron.d/track.rad
 
 %pre
 if [ "$1" = "1" ]; then
@@ -69,7 +70,12 @@ if [ "$1" = "1" ]; then
   echo "    sample virtual host configuration is located in:"
   echo ""
   echo "      /home/rad/track/init/config/virtualhost"
-#elif [ "$1" = "2" ]; then
+  
+  # Remove the cache files so new forms and models load correctly
+  /bin/rm -Rf /home/rad/track/webapp/cache/*
+elif [ "$1" = "2" ]; then
+  # Remove the cache files so new forms and models load correctly
+  /bin/rm -Rf /home/rad/track/webapp/cache/*
 fi
 
 
