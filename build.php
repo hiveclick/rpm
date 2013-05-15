@@ -127,6 +127,9 @@ try {
 	//}
 	
 	// Extract the git files
+	
+	if (!isset($settings['git'])) { throw new Exception('No GIT repository is defined in settings.ini'); }
+	
 	foreach ($settings['git'] as $key => $git_array) {
 		echo "Working on " . $key . "\n";
 		$source_folder = $base_dir . $git_array[1];
@@ -142,9 +145,14 @@ try {
 		echo " - Exporting url: " . $git_array[0] . "\n";
 		
 		$cmd = 'git clone --depth=1 --recurse-submodules ' . $git_array[0] . ' ' . $source_folder . '/';
+		echo $cmd . "\n";
 		passthru($cmd);
 		$cmd = 'cd ' . $source_folder . '/';
 		passthru($cmd);
+
+//		$cmd = 'git submodule update --init --recursive ' . $source_folder . '/';
+//		echo $cmd . "\n";
+//		passthru($cmd);
 		
 		$release_notes = '';
 		// Grab our log contents so we can post the release notes to the version server
@@ -152,8 +160,27 @@ try {
 		echo $cmd . "\n";
 		$release_notes = shell_exec($cmd);
 		
-		$cmd = 'git --git-dir ' . $source_folder . '/.git archive --format=tar master | tar xf -';
-		passthru($cmd);
+		// Remove the git files
+		$find_cmd = 'find ' . $source_folder . ' -type d -name ".git*"';
+		$git_folders = shell_exec($find_cmd);
+		foreach (explode("\n", $git_folders) as $git_folder) {
+			if (trim($git_folder) != '') {
+				$cmd = "rm -Rf " . $git_folder;
+				echo $cmd . "\n";
+				shell_exec($cmd);	
+			}
+		}
+		
+		// Remove the git files
+		$find_cmd = 'find ' . $source_folder . ' -type f -name ".git*"';
+		$git_files = shell_exec($find_cmd);
+		foreach (explode("\n", $git_files) as $git_file) {
+			if (trim($git_file) != '') {
+				$cmd = "rm -f " . $git_file;
+				echo $cmd . "\n";
+				shell_exec($cmd);
+			}	
+		}
 	}
 	
 	// Extract the support files
@@ -189,7 +216,7 @@ try {
 	// Extract the support folders
 	foreach ($settings['support_folders'] as $key => $folder_name) {
 		echo "Working on " . $key .  " => " . $folder_name[0] . "\n";
-		$source_folder = $base_dir . $folder_name[0];
+		$source_folder = $base_dir . '/' . $folder_name[0];
 		if (!file_exists($source_folder)) {
 			$cmd = 'mkdir -p ' . $source_folder;
 			passthru($cmd);

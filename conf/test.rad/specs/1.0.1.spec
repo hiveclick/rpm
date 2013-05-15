@@ -1,4 +1,4 @@
-%define name        ip.rad
+%define name        test.rad
 %define version 	[[VERSION]]
 %define revision	[[REVISION]]
 
