@@ -11,7 +11,7 @@ License: commercial
 Source: %{name}-%{version}.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 BuildArch: noarch x86_64 i386
-Requires: httpd php php-gd php-mysql mysql-server php-imap dos2unix php-pecl-ssh2 vsftpd
+Requires: httpd php php-gd php-mysql mysql-server php-imap dos2unix php-pecl-ssh2 vsftpd php-pecl-apc php-pdo
 
 %description
 Provides an api interface to the Rad Feeder

@@ -11,7 +11,7 @@ License: commercial
 Source: %{name}-%{version}.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 BuildArch: noarch x86_64 i386
-Requires: php httpd php-gd php-mysql mysql-server
+Requires: php httpd php-gd php-mysql mysql-server php-apc php-pdo
 
 %description
 Provides a redirect tracking site for the Rad Feeder

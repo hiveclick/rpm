@@ -66,7 +66,7 @@ if [ "$1" = "1" ]; then
   php /home/rad/admin/init/install.sh silent
   
   echo ""
-  echo "    Thank you for installing the unsub.rad package.  You need to setup a"
+  echo "    Thank you for installing the rad package.  You need to setup a"
   echo "    virtual host and add your API server url to the install.ini file.  A"
   echo "    sample virtual host configuration is located in:"
   echo ""

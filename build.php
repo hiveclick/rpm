@@ -130,9 +130,10 @@ try {
 	
 	if (!isset($settings['git'])) { throw new Exception('No GIT repository is defined in settings.ini'); }
 	
+	$release_notes = '';
 	foreach ($settings['git'] as $key => $git_array) {
 		echo "Working on " . $key . "\n";
-		$source_folder = $base_dir . $git_array[1];
+		$source_folder = $base_dir . $git_array['folder'];
 		echo " - Exporting to: " . $source_folder . "/\n";
 		if (file_exists($source_folder)) {
 			$cmd = 'rm -Rf ' . $source_folder;
@@ -142,9 +143,9 @@ try {
 			$cmd = 'mkdir -p ' . $source_folder;
 			passthru($cmd);
 		}
-		echo " - Exporting url: " . $git_array[0] . "\n";
+		echo " - Exporting url: " . $git_array['git'] . "\n";
 		
-		$cmd = 'git clone --depth=1 --recurse-submodules ' . $git_array[0] . ' ' . $source_folder . '/';
+		$cmd = 'git clone --depth=1 --recurse-submodules ' . $git_array['git'] . ' ' . $source_folder . '/';
 		echo $cmd . "\n";
 		passthru($cmd);
 		$cmd = 'cd ' . $source_folder . '/';
@@ -154,11 +155,13 @@ try {
 //		echo $cmd . "\n";
 //		passthru($cmd);
 		
-		$release_notes = '';
+		
 		// Grab our log contents so we can post the release notes to the version server
-		$cmd = 'git --no-pager --git-dir ' . $source_folder . '/.git log --pretty=oneline';
-		echo $cmd . "\n";
-		$release_notes = shell_exec($cmd);
+		if (isset($git_array['release_notes']) && $git_array['release_notes'] != '0') {
+			$cmd = 'git --no-pager --git-dir ' . $source_folder . '/.git log --pretty=oneline';
+			echo $cmd . "\n";
+			$release_notes .= shell_exec($cmd);
+		}
 		
 		// Remove the git files
 		$find_cmd = 'find ' . $source_folder . ' -type d -name ".git*"';
@@ -210,6 +213,7 @@ try {
 		$revision = $response_obj['record']['revision'];
 		Rad_StringTools::consoleWrite('Saving Component Version', $full_version, Rad_StringTools::CONSOLE_COLOR_GREEN, true);
 	} else {
+		var_dump($response_obj);
 		throw new Exception('Cannot find revision for component: ' . $BASENAME);	
 	}
 	
@@ -237,6 +241,10 @@ try {
 	}
 	
 	if (isset($settings['version_file']) && trim($settings['version_file']) != '') {
+		if (!file_exists(dirname($base_dir . $settings['root_folder'] . '/' . $settings['version_file']))) {
+			$cmd = 'mkdir -p ' . dirname($base_dir . $settings['root_folder'] . '/' . $settings['version_file']);
+			shell_exec($cmd);
+		}
 		file_put_contents($base_dir . $settings['root_folder'] . '/' . $settings['version_file'], $VERSION . '-' . $revision);
 	}
 	
@@ -309,7 +317,7 @@ try {
 		passthru($cmd);
 		
 		echo "Rebuilding Repositories (5)..." . "\n";	
-		$cmd = 'ssh root@yum.radinteractive.net createrepo --update /var/www/sites/yum/CentOS/5/local/noarch/';
+		$cmd = 'ssh root@yum.radinteractive.net createrepo -s sha1 --update /var/www/sites/yum/CentOS/5/local/noarch/';
 		passthru($cmd);
 		
 		echo "Removing older revisions (6)..." . "\n";
