@@ -11,7 +11,7 @@ License: commercial
 Source: %{name}-%{version}.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 BuildArch: noarch x86_64 i386
-Requires: php postfix dovecot
+Requires: php postfix dovecot php-process php-cli
 
 %description
 Provides bounce parsing and postfix syncing for Rad

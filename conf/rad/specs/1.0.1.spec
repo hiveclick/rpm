@@ -61,16 +61,22 @@ if [ "$1" = "1" ]; then
   # copy over the install.ini only the first time
   cp /home/rad/admin/init/install_sample.ini /home/rad/admin/init/install.ini
   
+  host=`echo $HOSTNAME | awk -F"." '{print $2"."$3}'`
+  /bin/sed -i "s/api_server=http:\/\/localhost/api_server=http:\/\/api.$host/g" /home/rad/admin/init/install.ini
+  /bin/sed -i "s/upload_host=api.rad.local/upload_host=api.$host/g" /home/rad/admin/init/install.ini
+  
+  if [ -f /root/.my.cnf ]; then
+    mysql_password=`/bin/grep "password" ~/.my.cnf | /usr/bin/head -n1 | /bin/sed 's/password=//' | /bin/sed 's/"//g'`
+    /bin/sed -i "s/db_pass=\"\"/db_pass=\"$mysql_password\"/g" /home/rad/admin/init/install.ini
+    /bin/sed -i "s/db_pass_readonly=\"\"/db_pass_readonly=\"$mysql_password\"/g" /home/rad/admin/init/install.ini
+  fi
+  
   echo ""
   echo "    Installing RAD for first time use..."
   php /home/rad/admin/init/install.sh silent
   
-  echo ""
-  echo "    Thank you for installing the rad package.  You need to setup a"
-  echo "    virtual host and add your API server url to the install.ini file.  A"
-  echo "    sample virtual host configuration is located in:"
-  echo ""
-  echo "      /home/rad/admin/init/config/virtualhost"
+  /bin/cp /home/rad/admin/init/config/virtualhost /etc/httpd/conf.d/admin.rad.conf
+  /bin/sed -i "s/rad\.localhost/www.$host/g" /etc/httpd/conf.d/admin.rad.conf
   
   # Remove the cache files so new forms and models load correctly
   /bin/rm -Rf /home/rad/admin/webapp/cache/*

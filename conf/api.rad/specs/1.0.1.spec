@@ -1,3 +1,4 @@
+%define _binaries_in_noarch_packages_terminate_build   0
 %define name        api.rad
 %define version 	[[VERSION]]
 %define revision	[[REVISION]]
@@ -11,7 +12,7 @@ License: commercial
 Source: %{name}-%{version}.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 BuildArch: noarch x86_64 i386
-Requires: httpd php php-gd php-mysql mysql-server php-imap dos2unix php-pecl-ssh2 vsftpd php-pecl-apc php-pdo
+Requires: httpd php php-gd php-mysql mysql-server php-imap dos2unix php-pecl-ssh2 vsftpd php-pdo php-process jwhois
 
 %description
 Provides an api interface to the Rad Feeder
@@ -44,7 +45,9 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 %attr(777, rad, apache) /home/rad/api/webapp/meta/imports
 %attr(777, rad, apache) /home/rad/api/webapp/meta/exports
 %attr(4755, rad, apache) /home/rad/api/webapp/meta/crons/
-%attr(775, rad, apache) /var/log/rad
+%attr(777, rad, apache) /var/log/rad
+%attr(777, rad, apache) /var/log/rad/lists
+%attr(777, rad, apache) /var/log/rad/imports
 %attr(644, root, root) /etc/cron.d/api.rad
 %attr(644, root, root) /etc/logrotate.d/api.rad
 
@@ -82,6 +85,15 @@ if [ "$1" = "1" ]; then
   if [ `grep -c ^/usr/sbin/nologin /etc/shells` = "0" ]; then
   	  echo "/usr/sbin/nologin" >> /etc/shells
   fi
+  
+  /bin/sed -i 's/;date.timezone.*/date.timezone=US\/Pacific/' /etc/php.ini
+  /bin/sed -i 's/post_max_size =.*/post_max_size = 128M/' /etc/php.ini
+  /bin/sed -i 's/upload_max_filesize =.*/upload_max_filesize = 128M/' /etc/php.ini
+  /bin/sed -i 's/session.gc_maxlifetime =.*/session.gc_maxlifetime = 604800/' /etc/php.ini
+  if [ `grep -c ^max_input_vars /etc/php.ini` = "0" ]; then
+    /bin/sed -i 's/max_input_time =.*/max_input_time = 60\nmax_input_vars = 2048/' /etc/php.ini
+  fi
+    
 elif [ "$1" = "2" ]; then
   # Reset the password for the rad user
   if [ `grep -c ^rad /etc/passwd` = "1" ]; then
@@ -121,21 +133,35 @@ if [ "$1" = "1" ]; then
   # Perform tasks to prepare for the initial installation
   # echo "Installing rad user environment..."
   
+  # Install the default mysql configuration
+  cp /home/rad/api/init/config/my.cnf /etc/my.cnf
+  
   # copy over the install.ini only the first time
   cp /home/rad/api/init/install_sample.ini /home/rad/api/init/install.ini
+  
+  host=`echo $HOSTNAME | awk -F"." '{print $2"."$3}'`
+  /bin/sed -i "s/api_server=http:\/\/localhost/api_server=http:\/\/api.$host/g" /home/rad/api/init/install.ini
+  /bin/sed -i "s/upload_host=api.rad.local/upload_host=api.$host/g" /home/rad/api/init/install.ini
+  
+  if [ -f /root/.my.cnf ]; then
+    mysql_password=`/bin/grep "password" ~/.my.cnf | /usr/bin/head -n1 | /bin/sed 's/password=//' | /bin/sed 's/"//g'`
+    /bin/sed -i "s/db_pass=\"\"/db_pass=\"$mysql_password\"/g" /home/rad/api/init/install.ini
+    /bin/sed -i "s/db_pass_readonly=\"\"/db_pass_readonly=\"$mysql_password\"/g" /home/rad/api/init/install.ini
+  fi
   
   echo ""
   echo "    Installing RAD for first time use..."
   php /home/rad/api/init/install.sh silent
   
-  echo ""
-  echo "    Thank you for installing the api.rad package.  You need to setup a"
-  echo "    virtual host.  A sample virtual host configuration is located in:"
-  echo ""
-  echo "      /home/rad/api/init/config/virtualhost" 
+  /bin/cp /home/rad/api/init/config/virtualhost /etc/httpd/conf.d/api.rad.conf
+  /bin/sed -i "s/api\.localhost/api.$host/g" /etc/httpd/conf.d/api.rad.conf
   
   # Remove the cache files so new forms and models load correctly
   /bin/rm -Rf /home/rad/api/webapp/cache/*
+  
+  # Start the vsftpd service
+  /sbin/chkconfig vsftpd on
+  /sbin/service vsftpd restart
 elif [ "$1" = "2" ]; then
   # Remove the cache files so new forms and models load correctly
   /bin/rm -Rf /home/rad/api/webapp/cache/*

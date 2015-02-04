@@ -11,7 +11,7 @@ License: commercial
 Source: %{name}-%{version}.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 BuildArch: noarch x86_64 i386
-Requires: php PowerMTA nc unix2dos php-gd
+Requires: php PowerMTA nc unix2dos php-gd php-process php-cli spamassassin
 
 %description
 Provides shared libraries for sending emails using the Rad feeder
@@ -57,8 +57,10 @@ if [ "$1" = "1" ]; then
     /bin/sed -i 's/^Defaults *requiretty/#Defaults    requiretty/' /etc/sudoers
     if [ `grep -c "^apache  ALL=NOPASSWD: PMTA" /etc/sudoers` = "0" ]; then
       echo "## Pmta" >> /etc/sudoers
-      echo "Cmnd_Alias PMTA = /usr/sbin/pmta" >> /etc/sudoers
+      echo "Cmnd_Alias PMTA = /usr/sbin/pmta, /etc/init.d/pmta, /sbin/ifconfig, /sbin/ip, /sbin/arping, /home/rad/cli/webapp/meta/crons/pmta.sh, /home/rad/cli/webapp/meta/crons/test_ips.sh, /home/rad/cli/webapp/meta/crons/move_eth_file.sh" >> /etc/sudoers
       echo "apache  ALL=NOPASSWD: PMTA" >> /etc/sudoers
+    else
+      /bin/sed -i 's/^Cmnd_Alias PMTA.*/Cmnd_Alias PMTA = \/usr\/sbin\/pmta, \/etc\/init.d\/pmta, \/sbin\/ifconfig, \/sbin\/ip, \/sbin\/arping, \/home\/rad\/cli\/webapp\/meta\/crons\/pmta.sh, \/home\/rad\/cli\/webapp\/meta\/crons\/test_ips.sh, \/home\/rad\/cli\/webapp\/meta\/crons\/move_eth_file.sh/' /etc/sudoers
     fi
   fi	  
 elif [ "$1" = "2" ]; then
@@ -67,9 +69,23 @@ elif [ "$1" = "2" ]; then
     /bin/sed -i 's/^Defaults *requiretty/#Defaults    requiretty/' /etc/sudoers
     if [ `grep -c "^apache  ALL=NOPASSWD: PMTA" /etc/sudoers` = "0" ]; then
       echo "## Pmta" >> /etc/sudoers
-      echo "Cmnd_Alias PMTA = /usr/sbin/pmta" >> /etc/sudoers
+      echo "Cmnd_Alias PMTA = /usr/sbin/pmta, /etc/init.d/pmta, /sbin/ifconfig, /sbin/ip, /sbin/arping, /home/rad/cli/webapp/meta/crons/pmta.sh, /home/rad/cli/webapp/meta/crons/test_ips.sh, /home/rad/cli/webapp/meta/crons/move_eth_file.sh" >> /etc/sudoers
       echo "apache  ALL=NOPASSWD: PMTA" >> /etc/sudoers
+    else
+      /bin/sed -i 's/^Cmnd_Alias PMTA.*/Cmnd_Alias PMTA = \/usr\/sbin\/pmta, \/etc\/init.d\/pmta, \/sbin\/ifconfig, \/sbin\/ip, \/sbin\/arping, \/home\/rad\/cli\/webapp\/meta\/crons\/pmta.sh, \/home\/rad\/cli\/webapp\/meta\/crons\/test_ips.sh, \/home\/rad\/cli\/webapp\/meta\/crons\/move_eth_file.sh/' /etc/sudoers
     fi
+  fi
+  
+  # Verify the folders exist
+  if [ ! -d /home/rad/cli/webapp/meta/drop/bad ]; then
+  	mkdir -p /home/rad/cli/webapp/meta/drop/bad
+  	chown apache:pmta /home/rad/cli/webapp/meta/drop/bad
+  	chmod 775 /home/rad/cli/webapp/meta/drop/bad
+  fi
+  if [ ! -d /home/rad/cli/webapp/meta/drop/pending ]; then
+  	mkdir -p /home/rad/cli/webapp/meta/drop/pending
+  	chown apache:pmta /home/rad/cli/webapp/meta/drop/pending
+  	chmod 775 /home/rad/cli/webapp/meta/drop/pending
   fi
 fi
 
@@ -98,12 +114,23 @@ if [ "$1" = "1" ]; then
   echo ""
   echo "      /home/rad/cli/init/install_pmta.sh"
   echo ""
-  echo "    You can also setup your web interface by copying the virtualhost"
-  echo "    file into your Apache directory.  The virtualhost file is located"
-  echo "    in:"
-  echo ""
-  echo "      /home/rad/cli/init/config/virtualhost"
-#elif [ "$1" = "2" ]; then
+  host=`echo $HOSTNAME`
+  
+  /bin/cp /home/rad/cli/init/config/virtualhost /etc/httpd/conf.d/cli.rad.conf
+  /bin/sed -i "s/cli\.localhost/$host/g" /etc/httpd/conf.d/cli.rad.conf
+
+elif [ "$1" = "2" ]; then
+  # Verify the folders exist
+  if [ ! -d /home/rad/cli/webapp/meta/drop/bad ]; then
+  	mkdir -p /home/rad/cli/webapp/meta/drop/bad
+  	chown apache:pmta /home/rad/cli/webapp/meta/drop/bad
+  	chmod 775 /home/rad/cli/webapp/meta/drop/bad
+  fi
+  if [ ! -d /home/rad/cli/webapp/meta/drop/pending ]; then
+  	mkdir -p /home/rad/cli/webapp/meta/drop/pending
+  	chown apache:pmta /home/rad/cli/webapp/meta/drop/pending
+  	chmod 775 /home/rad/cli/webapp/meta/drop/pending
+  fi
 fi
 
 

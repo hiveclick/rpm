@@ -11,7 +11,7 @@ License: commercial
 Source: %{name}-%{version}.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 BuildArch: noarch x86_64 i386
-Requires: remi-release mysql-server php php-mysql httpd mydns mydns-mysql
+Requires: remi-release mysql-server php php-mysql httpd mydns mydns-mysql php-pecl-apc php-pdo php-process
 
 %description
 Provides a MyDNS console for use in the RAD environment
@@ -59,10 +59,17 @@ if [ "$1" = "1" ]; then
   
   echo ""
   echo "    Installing RAD for first time use..."
+  php /home/rad/mydns/init/install.sh silent
   
-  chkconfig mydns on
-  chkconfig mysqld on
-  chkconfig httpd on
+  # Enable the various services on boot
+  /sbin/chkconfig mydns on
+  /sbin/chkconfig mydns_negative on
+  /sbin/chkconfig mysqld on
+  /sbin/chkconfig httpd on
+  
+  # Start the mydns service
+  /sbin/service mydns restart
+  /sbin/service mydns_negative restart
   
   echo ""
   echo "    Thank you for installing the mydns.rad package.  You need to setup a"
