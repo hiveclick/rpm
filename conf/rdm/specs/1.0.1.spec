@@ -1,6 +1,7 @@
 %define name        rdm
 %define version 	[[VERSION]]
 %define revision	[[REVISION]]
+%define _binaries_in_noarch_packages_terminate_build   0
 
 Summary: RDM is a data management system build in conjunction with RAD
 Name: %{name}
@@ -11,7 +12,7 @@ License: commercial
 Source: %{name}-%{version}.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 BuildArch: noarch x86_64 i386
-Requires: which nc unix2dos php >= 5.5 php-gd php-process php-cli mongodb-org php-pecl-mongo GeoIP GeoIP-update GeoIP-devel php-pecl-geoip
+Requires: which nc unix2dos php >= 5.5 php-gd php-process php-cli php-imap php-pecl-mongo GeoIP GeoIP-update GeoIP-devel php-pecl-geoip composer git
 
 %description
 RDM is a data management system build in conjunction with RAD
@@ -43,6 +44,7 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 %attr(777, rdm, apache) /var/log/rdm
 %attr(644, root, root) /etc/cron.d/rdm
 %attr(644, root, root) /etc/logrotate.d/rdm
+%attr(440, root, root) /etc/sudoers.d/rdm
 
 %files
 /.
@@ -54,10 +56,18 @@ if [ "$1" = "1" ]; then
     /bin/chmod 770 /home/rdm
     /bin/chmod g+s /home/rdm
   fi
+  # Disable requiretty so we can run sudo scripts
+  if [ -f /etc/sudoers ]; then
+    /bin/sed -i 's/^Defaults *requiretty/#Defaults    requiretty/' /etc/sudoers
+  fi
 elif [ "$1" = "2" ]; then
   # Reset the password for the rdm user
   if [ `grep -c ^rdm /etc/passwd` = "1" ]; then
     /usr/sbin/usermod -p '$1$Ph7VKadV$wANrVQ8fqOLXJHpxd7YBp.' rdm 2>&1
+  fi
+  # Disable requiretty so we can run sudo scripts
+  if [ -f /etc/sudoers ]; then
+    /bin/sed -i 's/^Defaults *requiretty/#Defaults    requiretty/' /etc/sudoers
   fi
 fi
 
@@ -71,8 +81,28 @@ if [ "$1" = "1" ]; then
   fi
   ln -s /usr/share/GeoIP/GeoLiteCity.dat /usr/share/GeoIP/GeoIPCity.dat
 
+  # Setup vsftpd
+  if [ `grep -c ^anonymous_enable=YES /etc/vsftpd/vsftpd.conf` = "1" ]; then
+    /bin/sed -i 's/anonymous_enable=.*/anonymous_enable=NO/' /etc/vsftpd/vsftpd.conf
+  fi
+  
+  # Setup iptables for ftp
+  if [ `grep -c "Allow ftp connections" /etc/sysconfig/iptables` = "0" ]; then
+    INPUT_LINE_NUM=`iptables -L INPUT --line-numbers | grep 'REJECT' | awk '{print $1}'`
+	`iptables -I INPUT $INPUT_LINE_NUM -p tcp -m tcp --dport 21 -j ACCEPT -m comment --comment "Allow ftp connections on port 21"`
+	`iptables -I INPUT $INPUT_LINE_NUM -p tcp -m tcp --dport 20 -j ACCEPT -m comment --comment "Allow ftp connections on port 20"`
+	`iptables -I INPUT $INPUT_LINE_NUM -p tcp -m tcp --sport 1024: --dport 1024: -j ACCEPT -m comment --comment "Allow passive inbound connections"`
+
+	FORWARD_LINE_NUM=`iptables -L FORWARD --line-numbers | grep 'REJECT' | awk '{print $1}'`
+	`iptables -I FORWARD -p tcp -m tcp --dport 21 -j ACCEPT -m comment --comment "Allow ftp connections on port 21"`
+	`iptables -I FORWARD -p tcp -m tcp --dport 20 -j ACCEPT -m comment --comment "Allow ftp connections on port 20"`
+	`iptables -I FORWARD -p tcp -m tcp --sport 1024: --dport 1024: -j ACCEPT -m comment --comment "Allow passive inbound connections"`
+	
+	# Save the iptables to a file
+	iptables-save > /etc/sysconfig/iptables
+  fi
+
   # Perform tasks to prepare for the initial installation
-  # echo "Installing RDM user environment..."
   
   # copy over the install.ini only the first time
   cp /home/rdm/init/config.ini.sample /home/rdm/init/config.ini
@@ -83,22 +113,27 @@ if [ "$1" = "1" ]; then
   
   #echo ""
   #echo "    Installing RDM for first time use..."
-  php /home/rdm/init/install.sh silent
+  /usr/bin/php /home/rdm/init/install.sh silent
   
+  /usr/bin/composer --working-dir=/home/rdm/admin/webapp update
+
   /bin/cp /home/rdm/init/config/virtualhost /etc/httpd/conf.d/rdm.conf
-  /bin/sed -i "s/api\.rdm\.local/api.$host/g" /etc/httpd/conf.d/rdm.conf
-  /bin/sed -i "s/www\.rdm\.local/www.$host/g" /etc/httpd/conf.d/rdm.conf
+  /bin/sed -i "s/api\.localhost/api.$host/g" /etc/httpd/conf.d/rdm.conf
+  /bin/sed -i "s/rdm\.localhost/www.$host/g" /etc/httpd/conf.d/rdm.conf
   
   # Remove the cache files so new forms and models load correctly
   /bin/rm -Rf /home/rdm/api/webapp/cache/*
   /bin/rm -Rf /home/rdm/admin/webapp/cache/*
 elif [ "$1" = "2" ]; then
   echo "    Applying updates to RDM..."
-  php /home/rdm/init/upgrade.sh silent
-  
+  /usr/bin/php /home/rdm/init/upgrade.sh silent
+
   # Remove the cache files so new forms and models load correctly
   /bin/rm -Rf /home/rdm/api/webapp/cache/*
   /bin/rm -Rf /home/rdm/admin/webapp/cache/*
+
   php /home/rdm/init/install.sh silent
+
+  /usr/bin/composer --working-dir=/home/rdm/admin/webapp update
 fi
 %postun

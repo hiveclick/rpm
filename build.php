@@ -278,15 +278,18 @@ try {
 	echo $release_notes . "\n";
 	Rad_StringTools::consoleWrite('Saving Component Version', $api_url, Rad_StringTools::CONSOLE_COLOR_RED, true);
 	$response_obj = Rad_Api::sendAjax('/Component/ComponentVersion', array('rpm_name' => $BASENAME, 'version' => ($VERSION), 'release_notes' => $release_notes, 'rpm_build_date' => date('Y-m-d')), 'POST', array(), $api_url);
-
 	if (isset($response_obj['record'])) {
 		$full_version = $response_obj['record']['version'];
-		$revision = $response_obj['record']['revision'];
+		$revision = substr($full_version, strpos($full_version, '-') + 1);
 		Rad_StringTools::consoleWrite('Saving Component Version', $full_version, Rad_StringTools::CONSOLE_COLOR_GREEN, true);
 	} else {
 		var_dump($response_obj);
 		throw new Exception('Cannot find revision for component: ' . $BASENAME);
 	}
+	/*
+	$revision = '4613';
+	$full_version = '1.0.1-' . $revision;
+	*/	
 
 	// Extract the support folders
 	if (isset($settings['support_folders']['folder'])) {
@@ -364,7 +367,7 @@ try {
 	passthru($cmd);
 
 	// Build the rpm
-	$cmd = 'rpmbuild -ba --define "_source_filedigest_algorithm md5" --define "_binary_filedigest_algorithm md5" --define "_source_payload nil" --define "_binary_payload nil" --quiet ' . $BUILDDIR . '/SPECS/' . $BASENAME . '-' . $spec_file;
+	$cmd = 'rpmbuild -ba --define "_binaries_in_noarch_packages_terminate_build 0" --define "_source_filedigest_algorithm md5" --define "_binary_filedigest_algorithm md5" --define "_source_payload nil" --define "_binary_payload nil" --quiet ' . $BUILDDIR . '/SPECS/' . $BASENAME . '-' . $spec_file;
 	echo $cmd . "\n";
 	passthru($cmd);
 
@@ -412,64 +415,64 @@ try {
 
 	if (strtoupper(trim($upload_rpm)) == 'Y') {
 		echo "Removing older revisions (5)..." . "\n";
-		$cmd = 'ssh -q root@yum.radinteractive.net rm -f /var/www/sites/yum/CentOS/5/local/*/RPMS/' . $BASENAME . '*';
+		$cmd = 'ssh -q root@yum.jojohost.net rm -f /var/www/sites/yum/CentOS/5/local/*/RPMS/' . $BASENAME . '*';
 		passthru($cmd);
 
 		if (file_exists($BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm')) {
 			echo "Uploading new revision (noarch) (6)..." . "\n";
-			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@yum.radinteractive.net:/var/www/sites/yum/CentOS/5/local/noarch/RPMS/ 2>&1';
+			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@yum.jojohost.net:/var/www/sites/yum/CentOS/5/local/noarch/RPMS/ 2>&1';
 			passthru($cmd);
 			echo "Rebuilding Repositories (5)..." . "\n";
-			$cmd = 'ssh -q root@yum.radinteractive.net createrepo -s sha1 --update /var/www/sites/yum/CentOS/5/local/noarch/';
+			$cmd = 'ssh -q root@yum.jojohost.net createrepo -s sha1 --update /var/www/sites/yum/CentOS/5/local/noarch/';
 			passthru($cmd);
 		}
 		if (file_exists($BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.i386.rpm')) {
 			echo "Uploading new revision (i386) (6)..." . "\n";
-			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.i386.rpm root@yum.radinteractive.net:/var/www/sites/yum/CentOS/5/local/i386/RPMS/ 2>&1';
+			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.i386.rpm root@yum.jojohost.net:/var/www/sites/yum/CentOS/5/local/i386/RPMS/ 2>&1';
 			passthru($cmd);
 			echo "Rebuilding Repositories (5)..." . "\n";
-			$cmd = 'ssh -q root@yum.radinteractive.net createrepo -s sha1 --update /var/www/sites/yum/CentOS/5/local/i386/';
+			$cmd = 'ssh -q root@yum.jojohost.net createrepo -s sha1 --update /var/www/sites/yum/CentOS/5/local/i386/';
 			passthru($cmd);
 		}
 		if (file_exists($BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.x86_64.rpm')) {
 			echo "Uploading new revision (x86_64) (6)..." . "\n";
-			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.x86_64.rpm root@yum.radinteractive.net:/var/www/sites/yum/CentOS/5/local/x86_64/RPMS/ 2>&1';
+			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.x86_64.rpm root@yum.jojohost.net:/var/www/sites/yum/CentOS/5/local/x86_64/RPMS/ 2>&1';
 			passthru($cmd);
 			echo "Rebuilding Repositories (5)..." . "\n";
-			$cmd = 'ssh -q root@yum.radinteractive.net createrepo -s sha1 --update /var/www/sites/yum/CentOS/5/local/x86_64/';
+			$cmd = 'ssh -q root@yum.jojohost.net createrepo -s sha1 --update /var/www/sites/yum/CentOS/5/local/x86_64/';
 			passthru($cmd);
 		}
 
 		echo "Removing older revisions (6)..." . "\n";
-		$cmd = 'ssh -q root@yum.radinteractive.net rm -f /var/www/sites/yum/CentOS/6/local/*/RPMS/' . $BASENAME . '*';
+		$cmd = 'ssh -q root@yum.jojohost.net rm -f /var/www/sites/yum/CentOS/6/local/*/RPMS/' . $BASENAME . '*';
 		passthru($cmd);
 
 		if (file_exists($BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm')) {
 			echo "Uploading new revision (noarch) (6)..." . "\n";
-			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@yum.radinteractive.net:/var/www/sites/yum/CentOS/6/local/noarch/RPMS/ 2>&1';
+			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@yum.jojohost.net:/var/www/sites/yum/CentOS/6/local/noarch/RPMS/ 2>&1';
 			passthru($cmd);
 			echo "Rebuilding Repositories (6)..." . "\n";
-			$cmd = 'ssh -q root@yum.radinteractive.net createrepo --update /var/www/sites/yum/CentOS/6/local/noarch/';
+			$cmd = 'ssh -q root@yum.jojohost.net createrepo --update /var/www/sites/yum/CentOS/6/local/noarch/';
 			passthru($cmd);
 		}
 		if (file_exists($BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.i386.rpm')) {
 			echo "Uploading new revision (i386) (6)..." . "\n";
-			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.i386.rpm root@yum.radinteractive.net:/var/www/sites/yum/CentOS/6/local/i386/RPMS/ 2>&1';
+			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.i386.rpm root@yum.jojohost.net:/var/www/sites/yum/CentOS/6/local/i386/RPMS/ 2>&1';
 			passthru($cmd);
 			echo "Rebuilding Repositories (6)..." . "\n";
-			$cmd = 'ssh -q root@yum.radinteractive.net createrepo --update /var/www/sites/yum/CentOS/6/local/i386/';
+			$cmd = 'ssh -q root@yum.jojohost.net createrepo --update /var/www/sites/yum/CentOS/6/local/i386/';
 			passthru($cmd);
 		}
 		if (file_exists($BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.x86_64.rpm')) {
 			echo "Uploading new revision (x86_64) (6)..." . "\n";
-			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.x86_64.rpm root@yum.radinteractive.net:/var/www/sites/yum/CentOS/6/local/x86_64/RPMS/ 2>&1';
+			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.x86_64.rpm root@yum.jojohost.net:/var/www/sites/yum/CentOS/6/local/x86_64/RPMS/ 2>&1';
 			passthru($cmd);
 			echo "Rebuilding Repositories (6)..." . "\n";
-			$cmd = 'ssh -q root@yum.radinteractive.net createrepo --update /var/www/sites/yum/CentOS/6/local/x86_64/';
+			$cmd = 'ssh -q root@yum.jojohost.net createrepo --update /var/www/sites/yum/CentOS/6/local/x86_64/';
 			passthru($cmd);
 		}
 
-		echo 'Done building ' . $BASENAME . ' rpm at revision ' . $VERSION . '-' . $revision . "\n";
+		echo 'Done building ' . $BASENAME . ' rpm at revision ' . $full_version . "\n";
 	} else {
 		echo 'RPM built in ' . $BUILDDIR . '/RPMS/' . "\n";
 		passthru('ls -lh ' . $BUILDDIR . '/RPMS/');
