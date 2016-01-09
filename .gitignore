@@ -1,0 +1,17 @@
+# Ignore Mac Files
+/nbproject/*
+
+# Ignore Zend files
+._1.0.1.spec
+.cookie.txt
+.svn_version
+.buildpath
+.settings
+.dropbox
+.htaccess
+.DS_Store
+._.DS_Store
+
+# Ignore library files
+conf/config.ini
+
