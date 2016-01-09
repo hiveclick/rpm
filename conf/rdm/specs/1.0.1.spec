@@ -12,7 +12,7 @@ License: commercial
 Source: %{name}-%{version}.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 BuildArch: noarch x86_64 i386
-Requires: which nc unix2dos php >= 5.5 php-gd php-process php-cli php-imap php-pecl-mongo GeoIP GeoIP-update GeoIP-devel php-pecl-geoip composer git
+Requires: which nc dos2unix vsftpd php >= 5.5 php-gd php-process php-opcache php-cli php-imap php-pecl-mongo GeoIP GeoIP-update GeoIP-devel php-pecl-geoip composer git
 
 %description
 RDM is a data management system build in conjunction with RAD
@@ -32,11 +32,12 @@ cp -rvf $RPM_BUILD_DIR/%{name}-%{version} $RPM_BUILD_ROOT
 if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 
 %files
-/.
+/home/rdm
 
 %defattr(775, rdm, apache, 775)
 
-%config(noreplace) /home/rdm/webapp/config/*
+%config(noreplace) /home/rdm/admin/webapp/config/*
+%config(noreplace) /home/rdm/api/webapp/config/*
 %config(noreplace) /etc/cron.d/rdm
 %config(noreplace) /etc/logrotate.d/rdm
 
@@ -45,9 +46,6 @@ if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 %attr(644, root, root) /etc/cron.d/rdm
 %attr(644, root, root) /etc/logrotate.d/rdm
 %attr(440, root, root) /etc/sudoers.d/rdm
-
-%files
-/.
 
 %pre
 if [ "$1" = "1" ]; then
@@ -76,6 +74,7 @@ if [ "$1" = "1" ]; then
   /bin/sed -i 's/;date.timezone.*/date.timezone=US\/Pacific/' /etc/php.ini
   /bin/sed -i 's/post_max_size =.*/post_max_size = 128M/' /etc/php.ini
   /bin/sed -i 's/upload_max_filesize =.*/upload_max_filesize = 128M/' /etc/php.ini
+  /bin/sed -i 's/^allow_url_fopen =.*/allow_url_fopen = On/' /etc/php.ini
   if [ `grep -c ^max_input_vars /etc/php.ini` = "0" ]; then
     /bin/sed -i 's/max_input_time =.*/max_input_time = 60\nmax_input_vars = 2048/' /etc/php.ini
   fi

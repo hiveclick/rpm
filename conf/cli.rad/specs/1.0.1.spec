@@ -1,6 +1,7 @@
 %define name        cli.rad
 %define version 	[[VERSION]]
 %define revision	[[REVISION]]
+%define debug_package %{nil}
 
 Summary: Provides shared libraries for sending emails using the Rad feeder
 Name: %{name}

@@ -1,0 +1,7 @@
+[rad]
+name=Rad Repo for Enterprise Linux $releasever - $basearch
+baseurl=http://rad:n0str0m0@yum.jojohost.net/CentOS/$releasever/local/$basearch/
+enabled=1
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rad.txt
+failovermethod=priority

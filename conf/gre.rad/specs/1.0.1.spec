@@ -31,7 +31,8 @@ cp -rvf $RPM_BUILD_DIR/%{name}-%{version} $RPM_BUILD_ROOT
 if( [ $RPM_BUILD_ROOT != '/' ] ); then rm -rf $RPM_BUILD_ROOT; fi;
 
 %files
-/.
+/home/rad/gre
+
 
 %post
 if [ "$1" = "1" ]; then

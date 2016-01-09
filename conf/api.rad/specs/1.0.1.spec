@@ -2,6 +2,7 @@
 %define name        api.rad
 %define version 	[[VERSION]]
 %define revision	[[REVISION]]
+%define debug_package %{nil}
 
 Summary: Provides an api interface to the Rad Feeder
 Name: %{name}

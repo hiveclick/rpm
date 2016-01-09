@@ -8,14 +8,14 @@ try {
 	$BUILDDIR = dirname(__FILE__) . '/build';
 
 	// Load the configuration file
-	if (!file_exists(dirname(__FILE__) . '/conf/rad.ini')) {
+	if (!file_exists(dirname(__FILE__) . '/conf/config.ini')) {
 		throw new Exception('We cannot find the conf/rad.ini configuration file.  Please create one before configuring a tunnel.');
 	} else {
-		$ini_settings = parse_ini_file(dirname(__FILE__) . '/conf/rad.ini', true);
+		$ini_settings = parse_ini_file(dirname(__FILE__) . '/conf/config.ini', true);
 		if (isset($ini_settings['api_server'])) {
 			$api_url = $ini_settings['api_server'];
 		} else {
-			throw new Exception('The api server is not set in your conf/rad.ini file.');
+			throw new Exception('The api server is not set in your conf/config.ini file.');
 		}
 	}
 
@@ -186,14 +186,20 @@ try {
 			// We are checking out a subfolder only
 			if (isset($git_array['source_folder'])) {
 				$cmd = 'git clone --depth=1 --recursive ' . $git_array['git'] . ' ' . $source_folder . '/.tmp/';
+				echo "******************************************\n";
 				echo $cmd . "\n";
 				passthru($cmd);
 				$cmd = 'mv ' . $source_folder . '/.tmp/' . $git_array['source_folder'] . '/* ' . $source_folder . '/';
+				echo "******************************************\n";
+				echo $cmd . "\n";
 				passthru($cmd);
+				echo "******************************************\n";
+				echo $cmd . "\n";
 				$cmd = 'rm -Rf ' . $source_folder . '/.tmp/';
 				passthru($cmd);
 			} else {
 				$cmd = 'git clone --depth=1 --recursive ' . $git_array['git'] . ' ' . $source_folder . '/';
+				echo "******************************************\n";
 				echo $cmd . "\n";
 				passthru($cmd);
 				$cmd = 'cd ' . $source_folder . '/';
@@ -235,7 +241,7 @@ try {
 			}
 		}
 	}
-
+	
 	if (isset($settings['files'])) {
 		foreach ($settings['files'] as $key => $file) {
 			echo "Working on " . $key . "\n";
@@ -246,7 +252,9 @@ try {
 					$cmd = 'mkdir -p ' . $source_folder;
 					passthru($cmd);
 				}
-				$cmd = 'cp ' . dirname(__FILE__) . '/conf/' . $conf_dir . '/' . $file[0] . ' ' . $base_dir . $file[1];
+				$cmd = '/bin/cp ' . dirname(__FILE__) . '/conf/' . $conf_dir . '/' . $file[0] . ' ' . $base_dir . $file[1];
+				echo "******************************************\n";
+				echo $cmd . "\n";
 				passthru($cmd);
 			} else {
 				echo ' - Source file does not exist: ' . dirname(__FILE__) . '/conf/' . $conf_dir . '/' . $file[0] . "\n";
@@ -254,19 +262,24 @@ try {
 			}
 		}
 	}
-
+	
 	// Extract the support files
 	if (isset($settings['support_files'])) {
 		foreach ($settings['support_files'] as $key => $files) {
-			echo "Working on " . $key . "\n";
+			echo "\n";
+		    echo "Working on " . $key . "\n";
 			if (file_exists($base_dir . $settings['root_folder'] . '/' . $files[0])) {
 				echo " - Exporting to: " . $base_dir . $files[1] . "\n";
 				$source_folder = dirname($base_dir . $files[1]);
 				if (!file_exists($source_folder)) {
 					$cmd = 'mkdir -p ' . $source_folder;
+					echo " - >>> ";
+					echo $cmd . "\n";
 					passthru($cmd);
 				}
-				$cmd = 'cp -Rf ' . $base_dir . $settings['root_folder'] . '/' . $files[0] . ' ' . $base_dir . $files[1];
+				$cmd = '/bin/cp -Rf ' . $base_dir . $settings['root_folder'] . '/' . $files[0] . ' ' . $base_dir . $files[1];
+				echo " - >>> ";
+				echo $cmd . "\n";
 				passthru($cmd);
 			} else {
 				echo ' - Source file does not exist: ' . $base_dir . $settings['root_folder'] . $files[0] . "\n";
@@ -274,7 +287,7 @@ try {
 			}
 		}
 	}
-
+		
 	echo $release_notes . "\n";
 	Rad_StringTools::consoleWrite('Saving Component Version', $api_url, Rad_StringTools::CONSOLE_COLOR_RED, true);
 	$response_obj = Rad_Api::sendAjax('/Component/ComponentVersion', array('rpm_name' => $BASENAME, 'version' => ($VERSION), 'release_notes' => $release_notes, 'rpm_build_date' => date('Y-m-d')), 'POST', array(), $api_url);
@@ -298,6 +311,8 @@ try {
 			$source_folder = $base_dir . '/' . $folder_name;
 			if (!file_exists($source_folder)) {
 				$cmd = 'mkdir -p ' . $source_folder;
+				echo "******************************************\n";
+				echo $cmd . "\n";
 				passthru($cmd);
 			}
 		}
@@ -355,11 +370,13 @@ try {
 	echo ' - Tar/Gzipping' . "\n";
 	// Tar up the checked out files
 	$cmd = 'tar -cPf ' . $BASENAME . '-' . $VERSION . '.tar ' . ' -C ' . dirname($base_dir) . ' ' . basename($base_dir);
-	echo $cmd . "\n";
+	echo "******************************************\n";
+				echo $cmd . "\n";
 	passthru($cmd);
 	// Gzip the tar
 	$cmd = 'gzip -f ' . $BASENAME . '-' . $VERSION . '.tar';
-	echo $cmd . "\n";
+	echo "******************************************\n";
+				echo $cmd . "\n";
 	passthru($cmd);
 
 	// We move the tar.gz to /usr/src/redhat/SOURCES because that's the default folder for building RPMs
@@ -372,17 +389,17 @@ try {
 	passthru($cmd);
 
 	if (file_exists('/root/rpmbuild/RPMS/noarch/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm')) {
-		$cmd = 'cp -Rf /root/rpmbuild/RPMS/noarch/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm ' . $BUILDDIR . '/RPMS/';
+		$cmd = '/bin/cp -Rf /root/rpmbuild/RPMS/noarch/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm ' . $BUILDDIR . '/RPMS/';
 		passthru($cmd);
 	}
 
 	if (file_exists('/root/rpmbuild/RPMS/i386/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.i386.rpm')) {
-		$cmd = 'cp -Rf /root/rpmbuild/RPMS/i386/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.i386.rpm ' . $BUILDDIR . '/RPMS/';
+		$cmd = '/bin/cp -Rf /root/rpmbuild/RPMS/i386/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.i386.rpm ' . $BUILDDIR . '/RPMS/';
 		passthru($cmd);
 	}
 
 	if (file_exists('/root/rpmbuild/RPMS/x86_64/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.x86_64.rpm')) {
-		$cmd = 'cp -Rf /root/rpmbuild/RPMS/x86_64/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.x86_64.rpm ' . $BUILDDIR . '/RPMS/';
+		$cmd = '/bin/cp -Rf /root/rpmbuild/RPMS/x86_64/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.x86_64.rpm ' . $BUILDDIR . '/RPMS/';
 		passthru($cmd);
 	}
 
@@ -419,7 +436,7 @@ try {
 		passthru($cmd);
 
 		if (file_exists($BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm')) {
-			echo "Uploading new revision (noarch) (6)..." . "\n";
+			echo "Uploading new revision (noarch) (5)..." . "\n";
 			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@yum.jojohost.net:/var/www/sites/yum/CentOS/5/local/noarch/RPMS/ 2>&1';
 			passthru($cmd);
 			echo "Rebuilding Repositories (5)..." . "\n";
@@ -427,7 +444,7 @@ try {
 			passthru($cmd);
 		}
 		if (file_exists($BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.i386.rpm')) {
-			echo "Uploading new revision (i386) (6)..." . "\n";
+			echo "Uploading new revision (i386) (5)..." . "\n";
 			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.i386.rpm root@yum.jojohost.net:/var/www/sites/yum/CentOS/5/local/i386/RPMS/ 2>&1';
 			passthru($cmd);
 			echo "Rebuilding Repositories (5)..." . "\n";
@@ -435,7 +452,7 @@ try {
 			passthru($cmd);
 		}
 		if (file_exists($BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.x86_64.rpm')) {
-			echo "Uploading new revision (x86_64) (6)..." . "\n";
+			echo "Uploading new revision (x86_64) (5)..." . "\n";
 			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.x86_64.rpm root@yum.jojohost.net:/var/www/sites/yum/CentOS/5/local/x86_64/RPMS/ 2>&1';
 			passthru($cmd);
 			echo "Rebuilding Repositories (5)..." . "\n";
@@ -469,6 +486,35 @@ try {
 			passthru($cmd);
 			echo "Rebuilding Repositories (6)..." . "\n";
 			$cmd = 'ssh -q root@yum.jojohost.net createrepo --update /var/www/sites/yum/CentOS/6/local/x86_64/';
+			passthru($cmd);
+		}
+		
+		echo "Removing older revisions (7)..." . "\n";
+		$cmd = 'ssh -q root@yum.jojohost.net rm -f /var/www/sites/yum/CentOS/7/local/*/RPMS/' . $BASENAME . '*';
+		passthru($cmd);
+
+		if (file_exists($BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm')) {
+			echo "Uploading new revision (noarch) (7)..." . "\n";
+			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.noarch.rpm root@yum.jojohost.net:/var/www/sites/yum/CentOS/7/local/noarch/RPMS/ 2>&1';
+			passthru($cmd);
+			echo "Rebuilding Repositories (7)..." . "\n";
+			$cmd = 'ssh -q root@yum.jojohost.net createrepo --update /var/www/sites/yum/CentOS/7/local/noarch/';
+			passthru($cmd);
+		}
+		if (file_exists($BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.i386.rpm')) {
+			echo "Uploading new revision (i386) (7)..." . "\n";
+			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.i386.rpm root@yum.jojohost.net:/var/www/sites/yum/CentOS/7/local/i386/RPMS/ 2>&1';
+			passthru($cmd);
+			echo "Rebuilding Repositories (7)..." . "\n";
+			$cmd = 'ssh -q root@yum.jojohost.net createrepo --update /var/www/sites/yum/CentOS/7/local/i386/';
+			passthru($cmd);
+		}
+		if (file_exists($BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.x86_64.rpm')) {
+			echo "Uploading new revision (x86_64) (7)..." . "\n";
+			$cmd = 'scp -q ' . $BUILDDIR . '/RPMS/' . $BASENAME . '-' . $VERSION . '-' . $revision . '.x86_64.rpm root@yum.jojohost.net:/var/www/sites/yum/CentOS/7/local/x86_64/RPMS/ 2>&1';
+			passthru($cmd);
+			echo "Rebuilding Repositories (7)..." . "\n";
+			$cmd = 'ssh -q root@yum.jojohost.net createrepo --update /var/www/sites/yum/CentOS/7/local/x86_64/';
 			passthru($cmd);
 		}
 
